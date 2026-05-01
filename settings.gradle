@@ -1,0 +1,30 @@
+rootProject.name = 'cs-study'
+
+// 자동 모듈 포함 — topics/ 아래에서 build.gradle 가진 폴더를 모두 모듈로 등록
+//
+// 이렇게 하면:
+// - CSstudy 폴더 한 번 열면 모든 example/ 와 멤버 Spring Boot 프로젝트 다 인식
+// - scaffold-week.sh 실행 후 IntelliJ에서 "Reload Gradle Project" 한 번이면 새 폴더 자동 추가
+// - 각 모듈은 독립적으로 ./gradlew 실행 가능
+
+import groovy.io.FileType
+
+def topicsDir = new File(rootDir, 'topics')
+if (topicsDir.exists()) {
+    topicsDir.eachFileRecurse(FileType.FILES) { file ->
+        if (file.name == 'build.gradle' && file.parentFile != rootDir) {
+            def projectDir = file.parentFile
+            def relativePath = rootDir.toPath().relativize(projectDir.toPath()).toString()
+            def projectPath = ':' + relativePath.replace(File.separator, ':')
+            include projectPath
+            project(projectPath).projectDir = projectDir
+        }
+    }
+}
+
+// template/ 도 포함 (Spring Boot 스켈레톤 자체도 IntelliJ에서 보이도록)
+def templateDir = new File(rootDir, 'template')
+if (new File(templateDir, 'build.gradle').exists()) {
+    include ':template'
+    project(':template').projectDir = templateDir
+}

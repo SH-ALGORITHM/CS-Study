@@ -1,0 +1,16 @@
+// IntelliJ가 이 폴더를 Java 프로젝트로 인식하도록 만드는 최소 설정.
+// 1주차는 외부 라이브러리 필요 없음 (Java 표준 라이브러리만 사용).
+
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}

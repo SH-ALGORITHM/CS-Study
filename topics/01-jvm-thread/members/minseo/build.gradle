@@ -1,0 +1,16 @@
+// 1주차 학습용 — Java 21 단독 (Spring Boot 없음).
+// 의존성 없음. 표준 라이브러리 + ExecutorService만 사용.
+
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}

@@ -1,0 +1,197 @@
+# =============================================================
+# OS — macOS
+# =============================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# =============================================================
+# OS — Windows
+# =============================================================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.stackdump
+[Dd]esktop.ini
+
+# =============================================================
+# OS — Linux
+# =============================================================
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================
+# IDE — JetBrains (IntelliJ IDEA, etc.)
+# =============================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+atlassian-ide-plugin.xml
+cmake-build-*/
+out/
+
+# =============================================================
+# IDE — VS Code
+# =============================================================
+.vscode/
+.history/
+*.code-workspace
+
+# =============================================================
+# IDE — Eclipse / STS
+# =============================================================
+.classpath
+.project
+.settings/
+.metadata
+bin/
+.springBeans
+.sts4-cache
+.factorypath
+.recommenders
+.apt_generated/
+
+# =============================================================
+# IDE — NetBeans
+# =============================================================
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# =============================================================
+# Java — compiled
+# =============================================================
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+hs_err_pid*
+replay_pid*
+
+# =============================================================
+# Build — Gradle
+# =============================================================
+.gradle/
+build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+.gradletasknamecache
+**/build/
+!src/**/build/
+
+# =============================================================
+# Build — Maven (혹시 쓰는 멤버 대비)
+# =============================================================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# =============================================================
+# Spring Boot — 로컬 전용 설정
+# =============================================================
+application-local.yml
+application-local.yaml
+application-local.properties
+application-secret.*
+application-personal.*
+
+# =============================================================
+# Logs / Runtime
+# =============================================================
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# =============================================================
+# Test outputs / coverage
+# =============================================================
+TEST-*.xml
+test-output/
+test-results/
+coverage/
+reports/
+jacoco.exec
+*.exec
+
+# =============================================================
+# Env / secrets
+# =============================================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.keystore
+secrets/
+
+# =============================================================
+# Docker — 로컬 데이터 볼륨
+# =============================================================
+postgres_data/
+redis_data/
+**/postgres_data/
+**/redis_data/
+
+# =============================================================
+# Node — 랜딩 페이지 연동 등
+# =============================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# =============================================================
+# Personal scratch — 개인 메모
+# =============================================================
+/scratch/
+*.scratch.md
+NOTES.local.md
+TODO.local.md
+
+# =============================================================
+# Claude Code 로컬 설정
+# =============================================================
+.claude/settings.local.json
+
+# =============================================================
+# example 폴더의 측정 기록 (참고 코드 실행 시 생기는 부산물 — git 무시)
+# 멤버 폴더의 measurements.md는 정상 commit.
+# =============================================================
+**/example/measurements.md

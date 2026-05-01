@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: csstudy-postgres
+    environment:
+      POSTGRES_USER: csstudy
+      POSTGRES_PASSWORD: csstudy1234
+      POSTGRES_DB: csstudy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U csstudy -d csstudy"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: csstudy-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

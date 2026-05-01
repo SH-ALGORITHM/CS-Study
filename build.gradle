@@ -1,0 +1,21 @@
+// 루트 build.gradle — 빌드할 코드 없음.
+// 각 모듈(topics/.../build.gradle, template/build.gradle)이 독립적으로 빌드됨.
+//
+// CSstudy 폴더를 IntelliJ로 열면:
+//   1. settings.gradle 읽어서 모든 모듈 자동 인식
+//   2. 각 모듈에 ▶ 버튼 표시
+//   3. 각 모듈은 자체 build.gradle 로 빌드/실행
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+// IntelliJ가 Kotlin DSL 빌드 스크립트 모델을 가져오려는 시도 무시.
+// 루트에는 이미 IntelliJ가 자동 추가하므로 서브프로젝트에만 조건부 추가.
+subprojects {
+    if (tasks.findByName('prepareKotlinBuildScriptModel') == null) {
+        tasks.register('prepareKotlinBuildScriptModel') { /* no-op */ }
+    }
+}

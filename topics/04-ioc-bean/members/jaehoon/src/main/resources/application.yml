@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: cs-study
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/csstudy
+    username: csstudy
+    password: csstudy1234
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop          # 매주 깨끗하게 시작 (테이블 자동 생성)
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+    open-in-view: false              # 트랜잭션 범위 학습용
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
