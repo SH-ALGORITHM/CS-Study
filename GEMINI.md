@@ -153,7 +153,7 @@ AI:
 AI:
   "환영! 이 순서로 시작해보자:
    1. README.md → CONTRIBUTING.md 정독 (15분)
-   2. Java 21 + Docker + IntelliJ 설치 (docs/setup 안내)
+   2. Java 21 + Docker + IntelliJ 설치 (CONTRIBUTING.md 1번 섹션 참고)
    3. CSstudy를 IntelliJ로 열고 Gradle sync 기다리기
    4. topics/01-jvm-thread/example/Stage1Race.java 열고 ▶
       → race condition 직접 보고 measurements.md 자동 생성 확인
