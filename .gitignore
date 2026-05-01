@@ -191,6 +191,33 @@ TODO.local.md
 .claude/settings.local.json
 
 # =============================================================
+# 멤버별 로컬 환경 — 충돌 방지 (각자 PC만 영향)
+# =============================================================
+
+# IntelliJ Run Configuration (멤버별 다름)
+.run/
+.idea/runConfigurations/
+
+# Docker 본인 PC 커스텀 (포트 변경 등)
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# 임시 / 백업 파일
+*.tmp
+*.bak
+*.swp
+*~
+
+# Spring 멤버 개인 설정 추가 패턴 (위 application-local.* 보충)
+*-local.yml
+*-local.yaml
+*-local.properties
+
+# Gradle 본인 PC 캐시
+.gradle-cache/
+.gradle/caches/
+
+# =============================================================
 # example 폴더의 측정 기록 (참고 코드 실행 시 생기는 부산물 — git 무시)
 # 멤버 폴더의 measurements.md는 정상 commit.
 # =============================================================
