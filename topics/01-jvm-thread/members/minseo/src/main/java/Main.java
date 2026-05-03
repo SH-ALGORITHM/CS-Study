@@ -12,7 +12,18 @@
  */
 public class Main {
 
-    public static void main(String[] args) {
-        System.out.println("1주차 학습 시작! scenario.md 읽고 본인 도메인으로 race 재현해보세요.");
+    public static void main(String[] args) throws InterruptedException {
+
+        Work w = new Work();
+
+        w.start();
+        Thread.sleep(1000);
+        w.checkOut = true;           // 퇴근 도장을 찍음
+        w.join(3000);
+
+        double missCount = w.isAlive() ? 1.0 : 0.0;
+
+        System.out.println("퇴근 도장이 찍히지 않았습니다.");
+        MeasurementLog.save("s2", "visibility 재현 (volatile X, 빈 루프)", missCount, 0.0);
     }
 }

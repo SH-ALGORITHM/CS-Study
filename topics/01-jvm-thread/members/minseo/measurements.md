@@ -9,3 +9,7 @@
   -> 스레드 수: 200 반복: 50000
   -> 도장 하나가 덮어 씌여짐
   -> 값을 중복으로 false로 읽고 true를 두번 return해서 발생
+
+- [05-04 03:40] s2 · visibility 재현 (volatile X, 빈 루프): 누락 1.0 / 0.0ms
+  -> 빈 while 루프에서 CPU 캐시의 값을 계속 참조하여 메인 메모리의 변경사항을 감지하지 못함
+  -> Thread.join(3000) 이후에도 isAlive가 true
