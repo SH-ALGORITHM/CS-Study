@@ -12,7 +12,25 @@
  */
 public class Main {
 
-    public static void main(String[] args) {
-        System.out.println("1주차 학습 시작! scenario.md 읽고 본인 도메인으로 race 재현해보세요.");
+    public static void main(String[] args) throws InterruptedException {
+        BatchJob batch = new BatchJob();
+
+        // 배치 작업을 별도 스레드에서 실행
+        Thread batchThread = new Thread(batch);
+        batchThread.setName("batch-worker");
+        batchThread.start();
+
+        // 메인 스레드: 5000ms 후 오류 감지 → 중단 신호
+        Thread.sleep(5000);
+        batch.abort();
+
+        // 배치 스레드가 완전히 종료될 때까지 최대 2초 대기
+        batchThread.join(2000);
+
+        System.out.println("[메인] 배치 스레드 살아있음: " + batchThread.isAlive());
+
+        MeasurementLog.save("s2", "visibility 재현 (volatile X, 빈 루프)",
+            batchThread.isAlive() ? 1 : 0,  // 1 = visibility 발생
+            0);
     }
 }
