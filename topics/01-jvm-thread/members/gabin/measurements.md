@@ -24,3 +24,4 @@
 - [05-04 20:09] s1 · baseline-noSync-noSleep(): 누락 0.0 / 497.0ms -> 결론 : sleep 없이는 발견할 가능성이 낮으나 race는 확률적으로 가려질 뿐이다. 
 - [05-04 20:13] s1 · baseline-noSync-sleep10ms-pool8-rounds200: 누락 1400.0 / 3088.0ms -> sleep 켜니까 race 매 라운드마다 발견. -> 8개 스레드 전부 같은 조건문을 통과했다는 것. 
 => 이를 통해 race는 평소에 가려진 잠재적인 버그, 즉 확률적이지만 확정된 결함임을 깨달음. 
+- [05-04 22:40] s1 · baseline-noSync(excessRefunds): 누락 710.0 / 54.0ms

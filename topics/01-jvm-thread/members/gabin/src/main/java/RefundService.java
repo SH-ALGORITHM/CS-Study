@@ -6,7 +6,7 @@ public class RefundService {
     private final int paymentAmount = 10000; //지불 금액
 
     //환불 메서드 : 환불이 이루어지면 t/ 아니면 f 반환
-    public boolean refund() throws InterruptedException{
+    public boolean refund() throws InterruptedException {
         if(!refunded) {
             //조건 문 통과 후 다른 스레드가 끼어들 수 있도록 시간 확보 -> 진단용으로 시간 간격 벌려 놓은 거기 때문이기에 s2 해결책 측정 시에는 제거해야 함.
             Thread.sleep(10);

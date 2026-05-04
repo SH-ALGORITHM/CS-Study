@@ -14,66 +14,66 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Stage1Race {
 
     public static void main(String[] args) throws InterruptedException {
-        int rounds = 200; // 라운드 수
-        int pool_size = 8; //노트북 cpu 수
-        int totalExcess =0;
-        int raceRoundCount =0;
-        int totalElapsedMs = 0;
+        //환불 서비스 호출
+        RefundService refundService = new RefundService();
+        //동시에 1000개 스레드 실행
+        ExecutorService executor = Executors.newFixedThreadPool(1000);
 
-        for (int r=0; r<rounds; r++){
-            RefundService refundService = new RefundService();
-            ExecutorService executor = Executors.newFixedThreadPool(pool_size);
+        AtomicInteger successCount = new AtomicInteger(0);
 
-            AtomicInteger successCount = new AtomicInteger(0);
+        //모든 스레드를 같은 시점에서 출발
+        CountDownLatch startSignal = new CountDownLatch(1);
 
-            //모든 스레드를 같은 시점에서 출발
-            CountDownLatch startSignal = new CountDownLatch(1);
+        // 1000번 시도
+        int totalAttempts = 1000;
 
-            for (int i = 0; i < pool_size; i++) {
-                executor.submit(() -> {
-                    try {
-                        startSignal.await();
-                    } catch (InterruptedException e){
-                        Thread.currentThread().interrupt();
-                        return;
+        for (int i = 0; i < totalAttempts; i++) {
+            executor.submit(() -> {
+                try {
+                    startSignal.await();
+                } catch (InterruptedException e){
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+                try {
+                    if (refundService.refund()) {
+                        successCount.incrementAndGet();
                     }
-                    //sleep() 사용 안 하므로 에러 안 던짐. 따라서 트라이캐치 불필요
-                    try {
-                        if (refundService.refund()) {
-                            successCount.incrementAndGet();
-                        }
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-
-            Thread.sleep(20);
-
-            long start = System.nanoTime();
-            startSignal.countDown();
-
-            executor.shutdown();
-            executor.awaitTermination(10, TimeUnit.SECONDS);
-
-            long elapsedMs = (System.nanoTime() - start) / 1_000_000;
-
-
-            //판정 : 실제 환불 횟수는 1건만 결처리 되어야 하므로 1보다 이상이면 race condition 발생으로 판정
-            if (successCount.get() > 1) {
-                System.out.println("라운드 " + r + ": race 발생 — successCount=" + successCount.get());
-            }
-
-            totalExcess += Math.max(0, successCount.get() - 1);
-            if (successCount.get() > 1) raceRoundCount++;
-            totalElapsedMs += elapsedMs;
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
-        System.out.println("=== s1 결과 (sleep 없음, 풀=" + pool_size + ", rounds=" + rounds + ") ===");
-        System.out.println("race 발생 라운드: " + raceRoundCount + "/" + rounds);
-        System.out.println("누적 초과 환불: " + totalExcess + "건");
-        System.out.println("총 측정 시간: " + totalElapsedMs + "ms");
+        Thread.sleep(100);
 
-        MeasurementLog.save("s1", "baseline-noSync-sleep10ms-pool8-rounds200", totalExcess, totalElapsedMs);
+        long start = System.nanoTime();
+        startSignal.countDown();
+
+        executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.SECONDS);
+
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+        //결과
+        System.out.println("============= 이중 환불 결과 =============");
+        System.out.println("동시 환불 요청: " + totalAttempts + "건");
+        System.out.println("기대: 환불 성공 1건 | 환불 금액 " + refundService.getPaymentAmount() + "원");
+        System.out.println("실제: 환불 성공 반환 " + successCount.get()
+            + "건 | 내부 환불 처리 " + refundService.getRefundCount()
+            + "건 | 환불 금액 " + refundService.getRefundedAmount() + "원");
+        System.out.println("최종 환불 상태: " + (refundService.isRefunded() ? "환불됨" : "환불 안 됨"));
+        System.out.println();
+
+        //판정 : 실제 환불 횟수는 1건만 결처리 되어야 하므로 1보다 이상이면 race condition 발생으로 판정
+        if (successCount.get() > 1) {
+            System.out.println("race condition 발생");
+            System.out.println("여러 스레드가 동시에 if (!refunded)를 통과해 같은 결제 건이 중복 환불됨");
+        } else {
+            System.out.println("운 좋게 race가 보이지 않음. 재실행 요함.");
+        }
+
+        int excessRefunds = Math.max(0, successCount.get() - 1);
+        MeasurementLog.save("s1", "baseline-noSync(excessRefunds)", excessRefunds, elapsedMs);
     }
 }
