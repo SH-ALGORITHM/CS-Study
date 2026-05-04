@@ -52,9 +52,9 @@ java -cp out Stage1Race
 ## 단계별 학습 목표
 
 ```
-[금~토 14:00]   s1 + s2 — Stage1Race.java + Stage2Visibility.java 실행해보고
+[금~일 14:00]   s1 + s2 — Stage1Race.java + Stage2Visibility.java 실행해보고
                 본인 도메인으로 변환해서 race + visibility 둘 다 재현
-                → 토 14:00까지 Draft PR 마감
+                → 일 14:00까지 Draft PR 마감
                 → 월 모임에서 Draft PR 화면 띄우고 시도 발표
                 ⚠️ visibility 안 보일 수 있음 — scenario.md "안 보일 때" 4단계 시도
 
