@@ -22,7 +22,6 @@ public class Stage2Visibility {
         seller.start();
 
         Thread.sleep(1000); // seller가 while 루프에 진입하도록 main 스레드 대기
-        System.out.println("[main] 매진 처리 (soldOut = true)");
         seller.soldOut = true;
 
         seller.join(5000); // seller가 정상 종료되는지 최대 5초 동안 대기
@@ -31,6 +30,7 @@ public class Stage2Visibility {
 
         boolean visibilityViolation = seller.isAlive(); // true -> visibility 문제 발생
 
+        System.out.println("[main] 매진 처리 (soldOut = true)");
         if (visibilityViolation) {
             System.out.println("-> 이미 매진인데도 계속 판매 중 (visibility 문제)");
         } else {
