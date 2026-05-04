@@ -52,19 +52,20 @@ java -cp out Stage1Race
 ## 단계별 학습 목표
 
 ```
-[토~월 모임 직전]  s1 — Stage1Race.java 실행해보고, 본인 도메인으로 변환해서 같은 race 재현
-                  → 월 모임에서 Draft PR 화면 띄우고 발표
+[금~토 14:00]   s1 + s2 — Stage1Race.java + Stage2Visibility.java 실행해보고
+                본인 도메인으로 변환해서 race + visibility 둘 다 재현
+                → 토 14:00까지 Draft PR 마감
+                → 월 모임에서 Draft PR 화면 띄우고 시도 발표
+                ⚠️ visibility 안 보일 수 있음 — scenario.md "안 보일 때" 4단계 시도
 
-[화~수]            s2 — Stage2Visibility.java 실행해보고, 본인이 직접 stop flag 패턴 만들기
-                  ⚠️ 안 보일 수 있음. scenario.md "안 보일 때" 4단계 시도
+[화~수]         s3 — Stage3Measurement.java 보고, 본인 측정 코드 작성
+                MeasurementLog.save() 호출 → measurements.md 자동 누적
 
-[수 23:59까지]     s3 — Stage3Measurement.java 보고, 본인 측정 코드 작성
-                  MeasurementLog.save() 호출 → measurements.md 자동 누적
-                  PR을 Draft → Ready로 전환
+[수 23:59까지]  PR을 Draft → Ready로 전환
 
-[목요일 모임]      s3 측정 결과 발표 → 운영자가 머지
+[목요일 모임]   s3 측정 결과 발표 → 운영자가 머지
 
-[여유 있으면]      s4 — Stage4VirtualThreads.java 보고 본인 도메인에도 적용
+[여유 있으면]   s4 — Stage4VirtualThreads.java 보고 본인 도메인에도 적용
 ```
 
 ## 주의사항
