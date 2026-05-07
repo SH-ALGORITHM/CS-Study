@@ -1,17 +1,8 @@
 public class LikeCount {
-    private int count;
+    private int count = 0;
 
-    public LikeCount() {
-        this.count = 0;
-    }
-
-    public boolean withdraw() {
-        if ( count < 100 ) {
-            count++;
-            return true;
-        } else  {
-            return false;
-        }
+    public void withdraw() {
+      count++;
     }
 
     public int getBalance() {

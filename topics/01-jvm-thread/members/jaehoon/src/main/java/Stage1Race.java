@@ -12,7 +12,6 @@ public class Stage1Race {
 
         ExecutorService executor = Executors.newFixedThreadPool(200);
 
-        AtomicInteger successCount = new AtomicInteger(0);
 
         CountDownLatch startSignal = new CountDownLatch(1);
 
@@ -25,9 +24,8 @@ public class Stage1Race {
                     Thread.currentThread().interrupt();
                     return;
                 }
-                if (counter.withdraw()) {
-                    successCount.incrementAndGet();
-                }
+                counter.withdraw();
+
             });
         }
         Thread.sleep(100);
@@ -40,20 +38,20 @@ public class Stage1Race {
         long elapsedMs = (System.nanoTime() - start) / 1_000_000;
 
         System.out.println("=== STAGE 1 — race condition 결과 ===");
-        System.out.println("최대 좋아요: 100원");
+        System.out.println("최대 좋아요: 1000");
         System.out.println("동시 좋아요 시도: " + totalAttempts + "명");
         System.out.println();
-        System.out.println("기대: 성공 100명, 잔고 0원");
-        System.out.println("실제: 성공 " + successCount.get() + "명, count" + counter.getBalance());
+        System.out.println("기대: count = " + totalAttempts );
+        System.out.println("실제: count = "  + counter.getBalance());
         System.out.printf ("시간: %dms%n", elapsedMs);
         System.out.println();
 
-        int diff = successCount.get() - 100;
-        if (diff != 0 || counter.getBalance() != 0) {
+        int diff = totalAttempts - counter.getBalance();;
+            if (diff != 0 ) {
             System.out.println("-> race condition 발생!");
             if (diff > 0) {
-                System.out.println("-> 100명만 성공해야 하는데 " + successCount.get() + "원이 성공");
-                System.out.println(" -> count가 " + counter.getBalance() + "100 초과");
+                System.out.println("-> 1000명만 성공해야 하는데 " + counter.getBalance() + "만 카운트됨");
+                System.out.println(" -> " + diff + "개 누락!");
             }
             System.out.println();
             System.out.println("-> 두 스레드가 동시에 'if (count <100 )' 통과 후 둘 다 'count++' 한 결과");
