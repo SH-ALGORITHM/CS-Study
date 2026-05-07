@@ -1,3 +1,5 @@
+package visibility;
+
 /**
  * 배치 작업 중단 플래그 — Visibility 문제 & 해결
  *
@@ -5,7 +7,7 @@
  * 오류 발생으로 중단 신호를 보내도 배치 스레드가
  * 캐시된 false를 읽어 계속 실행되는 문제
  */
-public class BatchJob implements Runnable {
+public class BatchJob implements AbortableJob {
 
     // ⚠️ 문제: 가시성 미보장 — CPU 캐시에 머물 수 있음
     private boolean aborted = false;
@@ -14,7 +16,9 @@ public class BatchJob implements Runnable {
     public void run() {
         System.out.println("[배치] 작업 시작");
 
-        while (!aborted) {} // 워커는 캐시값 false를 계속 봄
+        while (!aborted) {
+
+        } // 워커는 캐시값 false를 계속 봄
 
         System.out.println("[배치] 중단 감지 → 종료");
     }
