@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MainRace {
     public static void main(String[] args) throws InterruptedException {
 
-        Attendance attendance = new Attendance();
+        AttendanceNone attendance = new AttendanceNone();
 
         ExecutorService executor = Executors.newFixedThreadPool(200);
         AtomicInteger successCount = new AtomicInteger(0);
