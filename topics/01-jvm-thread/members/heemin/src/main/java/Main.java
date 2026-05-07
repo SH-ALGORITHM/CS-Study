@@ -5,7 +5,7 @@ import java.util.concurrent.*;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        System.out.println("1주차 학습 시작! 재고 race 시나리오");
+        System.out.println("1주차 S3 — AtomicInteger 재고 race 해결");
 
         int totalAttempts = 1000;
         int expectedSuccess = 100;
@@ -35,9 +35,16 @@ public class Main {
             );
         }
 
+        // 시간 측정 시작
+        long start = System.nanoTime();
+
         startLatch.countDown();
+
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
+
+        // 시간 계산
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
 
         for (Future<Boolean> f : futures) {
             if(f.get()) {
@@ -50,7 +57,13 @@ public class Main {
         System.out.println("기대 성공: " + expectedSuccess);
         System.out.println("실제 성공: " + successCount);
         System.out.println("남은 재고: " + stockMMS.getStock());
+        System.out.println("소요 시간(ms): " + elapsedMs);
 
-        MeasurementLog.save("s1", "stock race", Math.abs(successCount - expectedSuccess), 0);
+        // Atomic
+        MeasurementLog.save("s3", "atomic", Math.abs(successCount - expectedSuccess), elapsedMs);
+
+
+        // synchronized
+        // MeasurementLog.save("s3", "synchronized", Math.abs(successCount - expectedSuccess), elapsedMs);
     }
 }
