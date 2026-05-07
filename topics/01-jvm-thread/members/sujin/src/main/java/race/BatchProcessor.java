@@ -1,3 +1,5 @@
+package race;
+
 /**
  * 배치 작업 처리 카운터 — Race Condition 문제
  *
@@ -7,7 +9,7 @@
  * 일부 증가 횟수가 누락되는 문제
  */
 
-public class BatchProcessor {
+public class BatchProcessor implements Counter {
 
     // ⚠️ 문제: 원자성 미보장 — ++ 연산은 하나의 연산이 아님
     private int processedCount = 0;

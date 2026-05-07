@@ -1,3 +1,5 @@
+package common;
+
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -20,8 +22,8 @@ import java.time.format.DateTimeFormatter;
  *
  * <h3>사용법</h3>
  * <pre>
- * MeasurementLog.save("s3", "synchronized", 0, 600.0);
- * MeasurementLog.save("s3", "AtomicInteger", 0, 18.0);
+ * common.MeasurementLog.save("s3", "synchronized", 0, 600.0);
+ * common.MeasurementLog.save("s3", "AtomicInteger", 0, 18.0);
  * </pre>
  */
 public class MeasurementLog {
