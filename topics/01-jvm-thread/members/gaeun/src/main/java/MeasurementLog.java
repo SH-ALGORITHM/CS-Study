@@ -32,15 +32,15 @@ public class MeasurementLog {
     /**
      * 측정 결과 한 줄 기록.
      */
-    public static void save(String stage, String method, double misses, double millis) {
+    public static void save(String stage, String method, String missesColumnName, double misses, double millis) {
         try {
             if (!Files.exists(FILE)) {
                 Files.writeString(FILE,
                     "# 측정 기록\n\n자동 누적. 옆에 해석 메모는 직접 추가하세요.\n\n");
             }
 
-            String line = String.format("- [%s] %s · %s: 누락 %.1f / %.1fms%n",
-                LocalDateTime.now().format(TIME), stage, method, misses, millis);
+            String line = String.format("- [%s] %s · %s: %s %.1f / %.1fms%n",
+                LocalDateTime.now().format(TIME), stage, method, missesColumnName, misses, millis);
             Files.writeString(FILE, line, StandardOpenOption.APPEND);
 
             System.out.println("→ " + FILE.toAbsolutePath() + " 에 기록됨");
