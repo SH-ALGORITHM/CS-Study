@@ -1,0 +1,21 @@
+// 2주차 example — DB 트랜잭션 학습용
+// 외부 의존성: HikariCP (커넥션 풀) + PostgreSQL JDBC 드라이버
+
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'org.postgresql:postgresql:42.7.4'
+}
