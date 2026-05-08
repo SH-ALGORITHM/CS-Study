@@ -3,7 +3,7 @@ spring:
     name: cs-study
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/csstudy
+    url: jdbc:postgresql://localhost:5433/csstudy
     username: csstudy
     password: csstudy1234
     driver-class-name: org.postgresql.Driver
