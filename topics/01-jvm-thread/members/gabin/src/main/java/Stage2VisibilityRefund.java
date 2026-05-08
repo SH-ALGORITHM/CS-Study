@@ -8,7 +8,7 @@ public class Stage2VisibilityRefund {
 
     static class RefundProcessor extends Thread {
 
-        boolean  refundCutoffReached = false; //환불 마감 시각 도달 flag 변수
+        volatile boolean refundCutoffReached = false; //환불 마감 시각 도달 flag 변수
 
         @Override
         public void run() {

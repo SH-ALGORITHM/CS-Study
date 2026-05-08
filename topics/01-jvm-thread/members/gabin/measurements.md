@@ -34,3 +34,31 @@
 - [05-04 23:04] s2 · stop flag visibility (volatile 없음): 누락 0.0 / 26.0ms
 - [05-04 23:05] s2 · stop flag visibility (volatile 없음): 누락 0.0 / 23.0ms
   > JIT 워밍업 시간을 줄이면 visibility 위반이 안 보이는 것을 확인할 수 있었음. 
+- [05-05 14:43] s1 · baseline-noSync(excessRefunds): 누락 999.0 / 62.0ms
+
+
+[S3 들어가기 전 가설]
+- synchronized와 atomic은 s1,s2를 해결할 수 있지만 volatile은 가시성 문제만 해결하므로 s1은 해결하지 못할 것, 
+- 측정1
+- [05-08 11:23] s3 · 해결책 없음: 누락 199.0 / 34.5ms
+- [05-08 11:23] s3 · synchronized: 누락 0.0 / 19.2ms
+- [05-08 11:23] s3 · AtomicBoolean: 누락 0.0 / 16.0ms
+- [05-08 11:23] s3 · volatile: 누락 199.0 / 20.6ms
+- 측정2
+> 해결책 없음: check-then-act 구조가 깨져 초과 환불이 발생할 수 있음
+> synchronized: 한 번에 한 스레드만 refund()에 진입하므로 초과 환불 0
+> AtomicBoolean: compareAndSet(false, true)에 성공한 한 스레드만 환불 처리
+> volatile: 가시성은 보장하지만 check-then-act의 원자성은 보장하지 못함
+- [05-08 11:45] s3 · 해결책 없음: 누락 199.0 / 35.3ms
+- [05-08 11:45] s3 · synchronized: 누락 0.0 / 30.2ms
+- [05-08 11:45] s3 · AtomicBoolean: 누락 0.0 / 19.9ms
+- [05-08 11:45] s3 · volatile: 누락 199.0 / 32.4ms
+
+### 결과
+- baseline은 race가 발생하는 것을 확인할 수 있었고 synchronized와 atomic은 원자성을 누락 0으로 문제를 해결함을 확인하였다.
+- 단, volatile은 
+- [05-08 11:54] s2 · stop flag visibility (volatile 있음): 누락 0.0 / 1021.0ms
+- 로 원자성은 해결하지 못하는 것을 확인. 즉,countDown 후 200개의 스레드가 동시에 refund 변수를 확인했을 때 모두 false를 읽고 true로 설정한 후 ++하였는데, 나머지 9800 task는 그제서야 true를 읽고 false를 반환한 것. 
+- 성능 순위는 Atomic이 가장 빠르고 synchronized가 그 다음으로 빠른 것을 확인
+- 이는 synchronized는 대기가 발생하기에 성능저하가 있을 수 있고 Atomic은 CAS 실패한 9999개가 즉시 종료됨으로 더 빠를 것이라는 이론과 동일한 결과
+- 
