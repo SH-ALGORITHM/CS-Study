@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: csstudy1234
       POSTGRES_DB: csstudy
     ports:
-      - "5432:5432"
+      - "5433:5432"   # 호스트 5432 가 자주 쓰임 (다른 postgres / wefin 등 충돌) → 호스트 5433 으로 분리
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
