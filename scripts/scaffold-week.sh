@@ -1,21 +1,23 @@
 #!/bin/bash
-# 한 주차의 7명 멤버 폴더에 Spring Boot 스켈레톤(template)을 통째로 복사한다.
-# 모든 멤버가 동일한 application.yml 사용 (각자 로컬 DB, 충돌 없음).
+# 한 주차의 7명 멤버 폴더에 스켈레톤을 통째로 복사한다.
+#
+# 템플릿 우선순위:
+#   1. topics/{NN}-*/_member-template/  ← 주차 전용 (1~3주차 Java + JDBC 등)
+#   2. template/                         ← 기본 Spring Boot (4주차+)
 #
 # 운영자가 페이즈 시작 직전에 1번 실행:
-#   ./scripts/scaffold-week.sh 04   # 4주차 7명 폴더 다 채움
-#   ./scripts/scaffold-week.sh 05
-#   ...
+#   ./scripts/scaffold-week.sh 02   # 2주차 — 주차 전용 template 사용
+#   ./scripts/scaffold-week.sh 04   # 4주차 — 기본 Spring Boot template 사용
 #
-# 페이즈 의존성 바뀔 땐 (3주→7주, 9주→10주):
-#   1. template/build.gradle 의존성 갱신
+# 페이즈 의존성 바뀔 땐:
+#   1. template/build.gradle (또는 topics/{NN}-*/_member-template/build.gradle) 의존성 갱신
 #   2. ./scripts/scaffold-week.sh {주차} 실행
 
 set -e
 
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <week_number>"
-  echo "  e.g.) $0 04"
+  echo "  e.g.) $0 02"
   exit 1
 fi
 
@@ -29,8 +31,16 @@ if [ -z "$WEEK_DIR" ]; then
   exit 1
 fi
 
-if [ ! -d template ]; then
-  echo "❌ template/ 폴더 없음"
+# 주차 전용 template 있으면 우선 사용, 없으면 기본 Spring Boot template
+WEEK_TEMPLATE="$WEEK_DIR/_member-template"
+if [ -d "$WEEK_TEMPLATE" ]; then
+  SOURCE="$WEEK_TEMPLATE"
+  echo "📌 주차 전용 template 사용: $WEEK_TEMPLATE"
+elif [ -d "template" ]; then
+  SOURCE="template"
+  echo "📌 기본 template 사용: template/"
+else
+  echo "❌ template 없음 ($WEEK_TEMPLATE / template 둘 다 없음)"
   exit 1
 fi
 
@@ -53,9 +63,13 @@ for M in "${MEMBERS[@]}"; do
     continue
   fi
 
-  # template 통째 복사 (.gitkeep 제외)
-  cp -R template/. "$TARGET/"
+  # template 통째 복사 (.gitkeep / README.md 제외)
+  cp -R "$SOURCE"/. "$TARGET/"
   rm -f "$TARGET/.gitkeep"
+  # 주차 전용 template 의 README 는 운영용 안내라 멤버 폴더엔 불필요
+  if [ -f "$TARGET/README.md" ] && [ "$SOURCE" = "$WEEK_TEMPLATE" ]; then
+    rm -f "$TARGET/README.md"
+  fi
 
   echo "✅ $TARGET"
 done
