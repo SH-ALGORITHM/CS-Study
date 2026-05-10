@@ -12,7 +12,43 @@
  */
 public class Main {
 
-    public static void main(String[] args) {
-        System.out.println("1주차 학습 시작! scenario.md 읽고 본인 도메인으로 race 재현해보세요.");
+    public static void main(String[] args) throws InterruptedException {
+        System.out.println("=".repeat(50));
+        System.out.println("🔍 STAGE 2: 가시성(Visibility) 재현 테스트 시작");
+        System.out.println("=".repeat(50));
+
+        Work w = new Work();
+        w.start();
+
+        System.out.println("1. 일꾼 스레드 시작 (무한 루프 감시 중...)");
+        Thread.sleep(1000); // 1초 대기
+
+        System.out.println("2. 메인 스레드: checkOut = true 변경 (퇴근 신호)");
+        long startTime = System.currentTimeMillis();
+        w.checkOut = true;
+
+        System.out.println("3. 일꾼이 신호를 보는지 3초간 대기합니다...");
+        w.join(3000); // 3초 타임아웃 대기
+
+        long duration = System.currentTimeMillis() - startTime;
+        boolean isBugFound = w.isAlive(); // 3초 뒤에도 살아있으면 버그(가시성 문제) 발생!
+
+        if (isBugFound) {
+            System.out.println("\n❌ [결과] 가시성 위반 발생!");
+            System.out.println("   - 사유: 메인 스레드가 값을 바꿨지만, 일꾼 스레드는 캐시된 이전 값(false)만 보고 있음.");
+            System.out.println("   - 상태: 일꾼 스레드가 3초가 지나도 종료되지 않음.");
+
+            // 누락(misses)에 1.0을 넣어 "문제 발생"을 표시합니다.
+            MeasurementLog.save("s2", "Visibility-Repro (No Volatile)", 1.0, (double) duration);
+        } else {
+            System.out.println("\n✅ [결과] 가시성 문제 해결!");
+            System.out.println("   - 사유: 일꾼 스레드가 변경된 값을 즉시 확인하고 정상 종료됨.");
+            System.out.println("   - 소요 시간: " + duration + "ms");
+
+            // 누락(misses)에 0.0을 넣어 "정상"을 표시합니다.
+            MeasurementLog.save("s2", "Visibility-Resolved (Volatile Applied)", 0.0, (double) duration);
+        }
+
+        System.out.println("=".repeat(50));
     }
 }
