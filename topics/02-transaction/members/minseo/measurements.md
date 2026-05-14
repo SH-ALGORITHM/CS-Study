@@ -1,3 +1,7 @@
+- [05-14 15:00] s2-1 · JDBC 손으로 (READ_COMMITTED), 중복 예약 관찰
+- [05-14 15:10] s2-2 · TransactionHelper 사용 (RC), 코드 간결화 확인
+- [05-14 15:30] s3 · 격리 수준별 측정 (RC/RR/SR), Phantom Read 방어 확인
+
 ## STAGE 1 — 격리 수준별 이상 현상 (직접 관찰)
 
 회의실 예약 도메인 (`meeting_room_booking`) 을 세션 2개로 나누어 직접 관찰한 결과입니다.
@@ -33,3 +37,27 @@
 #### 5. PostgreSQL REPEATABLE READ의 독특한 동작
 - **관찰 결과**: `REPEATABLE READ` 수준에서 동시에 같은 행을 수정하려 했을 때, 나중에 온 세션 B가 대기하다가 세션 A가 커밋하는 순간 `ERROR: could not serialize access due to concurrent update (SQLState: 40001)` 에러를 뱉으며 종료됨.
 - **나의 해석**: PostgreSQL은 "First-Updater-Wins" 전략을 통해 데이터 유실을 강제로 막음. 덮어쓰기를 허용하는 대신 에러를 던져서 정합성을 지키며, 이 경우 애플리케이션 레벨에서 재시도(Retry) 로직이 반드시 필요함을 이해함.
+
+## STAGE 2 — Java 코드로 자동화 (Phantom Read 재현)
+
+### 2-1. 트랜잭션을 손으로 (Manual JDBC)
+- **대상 파일**: `Stage2RaceJdbc.java`
+- **재현 결과**: 200번의 중복 예약 시도 시, `READ_COMMITTED` 환경에서 다수의 중복 예약이 발생하는 것을 확인.
+- **관찰 포인트**: `conn.setAutoCommit(false)`와 `commit/rollback`을 직접 다루면서 트랜잭션의 경계를 코드 수준에서 이해함.
+
+### 2-2. 헬퍼로 추출 (TransactionHelper)
+- **대상 파일**: `TransactionHelper.java`, `Stage2WithHelper.java`
+- **개선점**: 반복되는 `try-with-resources`와 트랜잭션 제어 코드를 헬퍼로 분리하여 비즈니스 로직(`bookIfEmpty`)에 집중할 수 있게 됨.
+
+## STAGE 3 — 측정 + 해결
+
+| 격리 수준 | 중복 예약 (Phantom) | 실패 (40001) | 응답시간 (5회 평균) |
+|---|:---:|:---:|:---:|
+| READ COMMITTED | (측정 전) | 0 | (측정 전) |
+| REPEATABLE READ | (측정 전) | (측정 전) | (측정 전) |
+| SERIALIZABLE | 0 | (측정 전) | (측정 전) |
+
+### 측정 결과 해석
+- **READ COMMITTED**: Phantom Read로 인해 중복 예약이 빈번하게 발생함.
+- **REPEATABLE READ**: PostgreSQL의 RR은 Snapshot Isolation을 사용하여 Phantom Read를 방어하므로 중복 예약은 발생하지 않으나, 동시 업데이트 시 `serialization_failure`가 발생할 수 있음.
+- **SERIALIZABLE**: 완벽하게 Phantom Read를 방어하며, 트랜잭션 간의 충돌 시 에러를 통해 데이터 정합성을 유지함.
