@@ -27,7 +27,7 @@ public class RoomBooking {
 
 
     public boolean tryBook(Connection conn, int roomNo, LocalDate checkIn,
-                           LocalDate checkOut, String guestName) throws SQLException {
+                           LocalDate checkOut, String guestName) throws SQLException, InterruptedException {
         boolean alreadyBooked;
         try (PreparedStatement ps = conn.prepareStatement(SELECT_SQL)) {
             ps.setInt(1, roomNo);
@@ -42,6 +42,7 @@ public class RoomBooking {
         if (alreadyBooked) {
             return false;
         }
+        // Thread.sleep(10);
 
         try (PreparedStatement ps = conn.prepareStatement(INSERT_SQL)){
             ps.setInt(1, roomNo);

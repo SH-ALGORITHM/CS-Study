@@ -62,6 +62,8 @@ public class Stage2RaceJdbc {
                         } catch (SQLException ignore) {
                         }
                     }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 } finally {
                     if (conn != null) {
                         try {

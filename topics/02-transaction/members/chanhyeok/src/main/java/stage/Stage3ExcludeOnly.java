@@ -117,6 +117,8 @@ public class Stage3ExcludeOnly {
                         } catch (SQLException ignore) {
                         }
                     }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 } finally {
                     if (conn != null) {
                         try {
