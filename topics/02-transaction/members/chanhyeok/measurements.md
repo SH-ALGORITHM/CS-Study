@@ -37,3 +37,43 @@
 - [05-14 02:29] s3 · EXCLUDE_constraint: 누락 0.0 / 실패 38.6 / 24021.1ms
 - [05-14 02:59] s3 · EXCLUDE_only_no_other_cases: 누락 0.0 / 실패 25.8 / 12057.9ms
 - [05-14 03:14] s3 · EXCLUDE_only_no_other_cases: 누락 0.0 / 실패 42.4 / 12032.6ms
+- [05-14 10:46] s3 · EXCLUDE_only_no_other_cases: 누락 0.0 / 실패 34.4 / 12049.1ms
+- [05-14 11:42] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 1.0 / 실패 0.0 / 168.8ms
+- [05-14 11:42] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 151.2ms
+- [05-14 11:42] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 226.4ms
+- [05-14 11:42] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 189.8ms
+- s2 - 1 시도 수 늘리기 - ATTEMPTS = 200 -> 1000
+- [05-14 11:51] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 1.0 / 실패 0.0 / 520.0ms
+- [05-14 11:51] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 442.7ms
+- [05-14 11:51] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 474.5ms
+- s2 - 1 스레드 수 늘리기 - THREADS = 50 -> 100
+- [05-14 11:52] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 197.2ms
+- [05-14 11:52] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 168.8ms
+- [05-14 11:52] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 172.4ms
+- [05-14 11:52] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 146.1ms
+- s2 - 1 스레드 수 늘리기 - THREADS = 50 -> 200
+- [05-14 11:52] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 189.1ms
+- [05-14 11:52] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 184.2ms
+- [05-14 11:52] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 168.1ms
+- s2 - 1 race window 확장 - Thread.sleep(10)
+- [05-14 11:56] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 1.0 / 실패 0.0 / 165.1ms
+- [05-14 11:56] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 1.0 / 실패 0.0 / 167.3ms
+- [05-14 11:56] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 1.0 / 실패 0.0 / 186.8ms
+- [05-14 12:10] s3 · READ_COMMITTED: 누락 10.2 / 실패 0.0 / 75.0ms
+- [05-14 12:10] s3 · REPEATABLE_READ: 누락 25.0 / 실패 0.0 / 103.7ms
+- [05-14 12:10] s3 · SERIALIZABLE: 누락 0.0 / 실패 34.0 / 101.3ms
+- [05-14 12:10] s3 · EXCLUDE_constraint: 누락 0.0 / 실패 55.6 / 24031.0ms
+- [05-14 12:24] s3 · READ_COMMITTED: 누락 12.4 / 실패 0.0 / 65.8ms
+- [05-14 12:24] s3 · REPEATABLE_READ: 누락 26.4 / 실패 0.0 / 50.1ms
+- [05-14 12:24] s3 · SERIALIZABLE: 누락 0.0 / 실패 39.0 / 50.2ms
+- [05-14 12:24] s3 · EXCLUDE_constraint: 누락 0.0 / 실패 54.8 / 24020.9ms
+- [05-14 16:20] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 2.0 / 실패 0.0 / 149.5ms
+- [05-14 16:20] s3 · READ_COMMITTED: 누락 11.6 / 실패 0.0 / 65.6ms
+- [05-14 16:20] s3 · REPEATABLE_READ: 누락 24.8 / 실패 0.0 / 62.5ms
+- [05-14 16:20] s3 · SERIALIZABLE: 누락 0.0 / 실패 35.4 / 53.4ms
+- [05-14 16:20] s3 · EXCLUDE_constraint: 누락 0.0 / 실패 44.8 / 37.0ms
+- [05-14 16:37] s3 · READ_COMMITTED: 누락 11.2 / 실패 0.0 / 55.9ms
+- [05-14 16:37] s3 · REPEATABLE_READ: 누락 25.4 / 실패 0.0 / 51.7ms
+- [05-14 16:37] s3 · SERIALIZABLE: 누락 0.0 / 실패 37.0 / 58.2ms
+- [05-14 16:37] s3 · EXCLUDE_constraint: 누락 0.0 / 실패 72.4 / 37318.6ms
+- [05-14 17:45] s2-1 · JDBC 손으로 (READ_COMMITTED, INSERT race): 누락 0.0 / 실패 0.0 / 149.3ms
