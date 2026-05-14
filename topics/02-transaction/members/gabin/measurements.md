@@ -19,3 +19,10 @@ Lost Update: 1
 최종 재고: 190 (기대값: 0)
 Lost Update: 190
 응답시간: 3604.4ms
+- [05-14 10:18] s2-2 · helper checkout READ_COMMITTED: 누락 194.0 / 실패 0.0 / 6436.1ms
+> === STAGE 2-2: TransactionHelper 사용 (READ_COMMITTED + RMW) === <br>
+시도: 200, 성공: 200, 실패: 0
+생성된 주문: 200
+최종 재고: 194 (기대값: 0)
+Lost Update: 194
+응답시간: 6436.1ms
