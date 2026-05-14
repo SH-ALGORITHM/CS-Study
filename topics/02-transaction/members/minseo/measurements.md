@@ -52,12 +52,25 @@
 ## STAGE 3 — 측정 + 해결
 
 | 격리 수준 | 중복 예약 (Phantom) | 실패 (40001) | 응답시간 (5회 평균) |
-|---|:---:|:---:|:---:|
-| READ COMMITTED | (측정 전) | 0 | (측정 전) |
-| REPEATABLE READ | (측정 전) | (측정 전) | (측정 전) |
-| SERIALIZABLE | 0 | (측정 전) | (측정 전) |
+|---|:---------------:|:----------:|:------------:|
+| READ COMMITTED |      37.6       |     0      |   166.3ms    |
+| REPEATABLE READ |      49.0       |     0      |   250.3ms    |
+| SERIALIZABLE |        0        |    49.0    |   141.2ms    |
 
 ### 측정 결과 해석
 - **READ COMMITTED**: Phantom Read로 인해 중복 예약이 빈번하게 발생함.
 - **REPEATABLE READ**: PostgreSQL의 RR은 Snapshot Isolation을 사용하여 Phantom Read를 방어하므로 중복 예약은 발생하지 않으나, 동시 업데이트 시 `serialization_failure`가 발생할 수 있음.
 - **SERIALIZABLE**: 완벽하게 Phantom Read를 방어하며, 트랜잭션 간의 충돌 시 에러를 통해 데이터 정합성을 유지함.
+- [05-14 11:21] s2-1 · JDBC 손으로 (READ_COMMITTED): 누락 3.0 / 실패 0.0 / 316.7ms
+- [05-14 11:22] s2-2 · TransactionHelper (RC): 누락 3.0 / 실패 0.0 / 412.7ms
+- [05-14 11:23] s3 · READ_COMMITTED: 누락 37.6 / 실패 0.0 / 166.3ms
+- [05-14 11:23] s3 · REPEATABLE_READ: 누락 49.0 / 실패 0.0 / 250.3ms
+- [05-14 11:23] s3 · SERIALIZABLE: 누락 0.0 / 실패 49.0 / 141.2ms
+- [05-14 16:24] s3 · READ_COMMITTED: 누락 33.6 / 실패 0.0 / 68.8ms
+- [05-14 16:24] s3 · REPEATABLE_READ: 누락 47.0 / 실패 0.0 / 54.9ms
+- [05-14 16:24] s3 · SERIALIZABLE: 누락 0.0 / 실패 49.0 / 69.6ms
+- [05-14 16:39] s2-1 · JDBC 손으로 (READ_COMMITTED): 누락 1.0 / 실패 0.0 / 213.9ms
+- [05-14 16:40] s2-2 · TransactionHelper (RC): 누락 2.0 / 실패 0.0 / 325.5ms
+- [05-14 16:42] s3 · READ_COMMITTED: 누락 33.8 / 실패 0.0 / 82.3ms
+- [05-14 16:42] s3 · REPEATABLE_READ: 누락 48.0 / 실패 0.0 / 62.2ms
+- [05-14 16:42] s3 · SERIALIZABLE: 누락 0.0 / 실패 48.4 / 72.7ms
