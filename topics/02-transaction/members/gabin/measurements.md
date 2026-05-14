@@ -26,3 +26,15 @@ Lost Update: 190
 최종 재고: 194 (기대값: 0)
 Lost Update: 194
 응답시간: 6436.1ms
+- [05-14 10:55] s3 · READ_COMMITTED: 누락 194.2 / 실패 0.0 / 2871.6ms
+- [05-14 10:55] s3 · REPEATABLE_READ: 누락 0.0 / 실패 195.8 / 953.1ms
+- [05-14 10:55] s3 · SERIALIZABLE: 누락 0.0 / 실패 195.4 / 1318.5ms
+> READ_COMMITTED 측정 완료: Lost Update 194.2, 실패 0.0, 응답시간 2871.6ms
+REPEATABLE_READ 측정 완료: Lost Update 0.0, 실패 195.8, 응답시간 953.1ms
+SERIALIZABLE 측정 완료: Lost Update 0.0, 실패 195.4, 응답시간 1318.5ms
+
+| 격리 수준 | Lost Update 평균 | 실패 평균 | 응답시간 평균(ms) |
+|---|---:|---:|---:|
+| READ_COMMITTED | 194.2 | 0.0 | 2871.6 |
+| REPEATABLE_READ | 0.0 | 195.8 | 953.1 |
+| SERIALIZABLE | 0.0 | 195.4 | 1318.5 |
