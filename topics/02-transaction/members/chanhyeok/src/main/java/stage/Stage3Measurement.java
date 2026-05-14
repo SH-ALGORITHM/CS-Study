@@ -66,6 +66,7 @@ public class Stage3Measurement {
         double totalRace = 0, totalFailed = 0, totalMillis = 0;
         for (int run = 0; run < RUNS; run++) {
             RunResult r = runOnce(ds, booking, isoLevel, useExclude);
+            System.out.println("  RUN " + run + ": " + r.millis + " ms");
             totalRace += r.race;
             totalFailed += r.failed;
             totalMillis += r.millis;
@@ -105,7 +106,7 @@ public class Stage3Measurement {
                     if (ok) {
                         success.incrementAndGet();
                     }
-                } catch (SQLException e) {
+                } catch (SQLException | InterruptedException e) {
                     failed.incrementAndGet();
                     if (conn != null) {
                         try {
@@ -129,7 +130,7 @@ public class Stage3Measurement {
         long t0 = System.nanoTime();
         start.countDown();
         executor.shutdown();
-        executor.awaitTermination(60, TimeUnit.SECONDS);
+        executor.awaitTermination(300, TimeUnit.SECONDS);   // 60 → 300 — timeout 왜곡 제거
         double millis = (System.nanoTime() - t0) / 1_000_000.0;
 
         int race;
