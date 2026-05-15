@@ -1,0 +1,22 @@
+// 3주차 학습용 — Java 21 + JDBC + HikariCP + Lettuce (Redis 분산락).
+// scaffold-week.sh 가 이 파일을 멤버 폴더로 복사한다.
+
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'org.postgresql:postgresql:42.7.4'
+    implementation 'io.lettuce:lettuce-core:6.3.0.RELEASE'   // Redis 분산락
+}
