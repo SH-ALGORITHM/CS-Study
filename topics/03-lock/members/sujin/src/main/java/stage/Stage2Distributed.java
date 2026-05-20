@@ -21,12 +21,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * STAGE 2-3. Redis 분산락 실습.
  *
- * lock:ticker:{ticker} 키를 잡은 작업만 DB 거래를 수행한다.
- * Redis lock 획득 실패는 fail-fast로 처리되어 failed에 기록된다.
- */
-/**
- * STAGE 2-3. Redis 분산락 실습.
- *
  * ticker 단위 Redis lock을 먼저 획득한 작업만 DB 거래를 수행한다.
  * 같은 종목에 대한 외부 거래소 API 호출을 여러 서버가 동시에 보내지 않도록
  * 직렬화하는 상황을 흉내낸다.
@@ -118,8 +112,6 @@ public class Stage2Distributed {
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    // 현재 시나리오에서는 대부분 Redis lock 획득 실패를 의미한다.
-                    // 기다리지 않는 전략이므로 높은 경합에서 실패 수가 늘어날 수 있다.
                     failed.incrementAndGet();
                 } catch (SQLException e) {
                     failed.incrementAndGet();

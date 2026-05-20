@@ -136,9 +136,11 @@ public class Stage2Pessimistic {
 
         Portfolio portfolio = readPortfolio(dataSource);
         int expectedSuccess = ATTEMPTS;
-        // 모든 매수가 성공했다면 현금은 200 * 1000만큼 줄고, 보유 수량은 200주 늘어야 한다.
-        BigDecimal expectedCash = INITIAL_CASH.subtract(PRICE.multiply(BigDecimal.valueOf(expectedSuccess)));
-        long expectedQty = INITIAL_QTY + expectedSuccess;
+        // 모든 매수가 성공했다면 현금은 성공 횟수 * QTY * PRICE 만큼 줄고, 보유 수량은 성공 횟수 * QTY 만큼 늘어야 한다.
+        BigDecimal expectedCash = INITIAL_CASH.subtract(
+            PRICE.multiply(BigDecimal.valueOf(QTY)).multiply(BigDecimal.valueOf(expectedSuccess))
+        );
+        long expectedQty = INITIAL_QTY + (QTY * expectedSuccess);
 
         // 비관적 락에서는 성공 횟수와 최종 DB 상태가 기대값과 일치해야 한다.
         int misses = 0;
