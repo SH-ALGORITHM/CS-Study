@@ -205,12 +205,11 @@ public final class StockTrade {
         return false;
     }
 
-
     /**
      * Redis 종목 단위 분산락을 잡은 뒤 주식 매수를 처리한다.
      *
-     * lock:ticker:{ticker} 키로 외부 거래소 API 같은 DB 밖 자원을 직렬화하는 흐름을 흉내낸다.
-     * DB row 정합성은 내부에서 비관적 락 메서드를 재사용해 지킨다.
+     * Redis lock은 DB 밖의 외부 자원 접근을 직렬화하는 역할이고,
+     * 실제 wallet/holding row 정합성은 내부의 비관적 락 메서드가 지킨다.
      */
     public boolean buyWithDistributedLock(long userId, String ticker, long qty, BigDecimal price) throws SQLException {
         return withTickerLock(ticker, () -> buyPessimistic(userId, ticker, qty, price));
@@ -231,9 +230,12 @@ public final class StockTrade {
     /**
      * ticker 단위 Redis lock을 획득한 동안 action을 실행한다.
      *
-     * SET key value NX EX로 TTL이 있는 lock을 잡고,
-     * finally에서 Lua script로 get + del을 원자적으로 수행한다.
+     * SET key value NX EX로 TTL이 있는 lock을 잡는다.
      * lock 획득에 실패하면 action을 실행하지 않고 false를 반환한다.
+     *
+     * unlock은 단순 DEL이 아니라 Lua script로 수행한다.
+     * TTL 만료 후 다른 작업이 같은 key를 다시 잡았을 때,
+     * 이전 작업이 새 lock을 지워버리는 사고를 막기 위해 value를 비교한 뒤 삭제한다.
      */
     private boolean withTickerLock(String ticker, SqlBooleanSupplier action) throws SQLException {
         String lockKey = "lock:ticker:" + ticker;

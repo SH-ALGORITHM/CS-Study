@@ -20,3 +20,24 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.7.4'
     implementation 'io.lettuce:lettuce-core:6.3.0.RELEASE'   // Redis 분산락
 }
+
+tasks.register('runStage2Pessimistic', JavaExec) {
+    group = 'study'
+    description = 'Run STAGE 2-1 pessimistic lock measurement'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'stage.Stage2Pessimistic'
+}
+
+tasks.register('runStage2Optimistic', JavaExec) {
+    group = 'study'
+    description = 'Run STAGE 2-2 optimistic lock measurement'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'stage.Stage2Optimistic'
+}
+
+tasks.register('runStage2Distributed', JavaExec) {
+    group = 'study'
+    description = 'Run STAGE 2-3 Redis distributed lock measurement'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'stage.Stage2Distributed'
+}
