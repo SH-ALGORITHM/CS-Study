@@ -1,0 +1,31 @@
+// 4주차 example — Spring IoC / DI / Bean 학습용
+// 외부 의존성: Spring Boot 3.x (spring-context 포함) + HikariCP / PostgreSQL JDBC (STAGE 2-1 마이그레이션 학습)
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot 3.x (Spring 6.x 포함) — STAGE 1-4 부터 SpringApplication.run() 사용
+    // STAGE 1-1 ~ 1-3 은 AnnotationConfigApplicationContext 만 사용 (순수 Spring)
+    implementation 'org.springframework.boot:spring-boot-starter:3.2.0'
+
+    // 3주차 코드 마이그레이션 학습용 (STAGE 2-1)
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'org.postgresql:postgresql:42.7.4'
+}
+
+application {
+    mainClass = providers.gradleProperty('mainClass').orElse('stage.s1.Stage1Lifecycle')
+}
