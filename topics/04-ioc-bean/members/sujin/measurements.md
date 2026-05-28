@@ -47,12 +47,6 @@
 - `NotificationService` `@PreDestroy`
 - `EmailSender` `@PreDestroy`
 
-### 실행 명령
-
-```bash
-./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s1.Stage1Lifecycle
-```
-
 ### 해석
 
 IoC 컨테이너가 Bean 생성, 의존성 연결, 초기화 콜백, 소멸 콜백을 관리한다.  
@@ -74,11 +68,6 @@ IoC 컨테이너가 Bean 생성, 의존성 연결, 초기화 콜백, 소멸 콜�
 - `@Bean` Bean 수: 8개 (`email`만 명시 등록)
 - `@Bean`으로 등록한 `EmailSender`도 `@PostConstruct`, `@PreDestroy`가 호출됨
 
-### 실행 명령
-
-```bash
-./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s1.Stage1ScanVsBean
-```
 
 ### 해석
 
@@ -112,12 +101,6 @@ IoC 컨테이너가 Bean 생성, 의존성 연결, 초기화 콜백, 소멸 콜�
 - Service Locator 방식: `getBean()` 호출이 별도 클래스 안으로 숨지만, 클래스가 여전히 Spring 컨테이너에 의존함
 - 생성자 주입 방식: 필요한 의존성이 생성자 파라미터에 드러남
 - 생성자 주입 방식은 테스트에서 `new NotificationUseCase(mockService)`처럼 대체 객체를 넣기 쉽다.
-
-### 실행 명령
-
-```bash
-./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s1.Stage1GetBeanVsAutowired
-```
 
 ### 해석
 
@@ -158,12 +141,6 @@ Bean 생성, 의존성 주입, 라이프사이클 관리, 환경 정보, 이벤�
   - `JacksonAutoConfiguration`
 - 실험 안정화를 위해 웹 서버는 띄우지 않고, `DataSource`, JPA, Redis 자동 설정은 제외했다.
 - DevTools restart / LiveReload도 꺼서 Bean 수 관찰 로그가 중복 실행되지 않도록 했다.
-
-### 실행 명령
-
-```bash
-./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s1.Stage1BootCount
-```
 
 ### 해석
 
@@ -260,12 +237,6 @@ STAGE 1-2에서 확인한 `@Bean`의 존재 이유가 여기서 바로 이어진
 - After DB connection: success, catalog=`csstudy`
 - After cleanup: `context.close()` 시 `destroyMethod = "close"`로 HikariCP shutdown 자동 호출
 
-### 실행 명령
-
-```bash
-./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s2.Stage2Migration
-```
-
 ### 해석
 
 3주차에서는 객체 생성과 종료 순서를 애플리케이션 코드가 직접 기억해야 했다.  
@@ -321,11 +292,6 @@ STAGE 1-2에서 확인한 `@Bean`의 존재 이유가 여기서 바로 이어진
 | 순환 참조 감지 시점 | 부팅 시점 즉시 (`BeanCurrentlyInCreationException`) | Spring Boot 2.6+ 부팅 실패. 옛 버전은 런타임 NPE 가능 | 동일 |
 | 선택적 의존성 표현 | 어색함 (오버로드 필요) | 가능 (`required = false`) | 가장 자연스러움 |
 
-### 실행 명령
-
-```bash
-./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s2.Stage2InjectionTypes
-```
 
 ### 해석
 
@@ -396,13 +362,6 @@ public Dispatcher(Map<String, NotificationSender> senders) { ... }
 `dispatcher.dispatch("email", ...)` / `dispatch("push", ...)` 는 정상 동작.  
 `dispatcher.dispatch("sms", ...)` 는 `Map.get` 이 `null` 을 반환해서 "등록된 sender 없음" 으로 안내 — 디폴트 이름은 `"smsSender"` 이지 `"sms"` 가 아니라는 점을 직접 확인.
 
-### 실행 명령
-
-```bash
-./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s2.Stage2Qualifier
-./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s2.Stage2MapInjection
-```
-
 ### 해석
 
 같은 타입 Bean 이 여러 개일 때 Spring 은 후보를 자동으로 좁히지 못한다.  
@@ -433,12 +392,6 @@ public Dispatcher(Map<String, NotificationSender> senders) { ... }
 | 2. `@Qualifier` 만 | (없음) | `@Qualifier("smsSender")` | `SmsSender` | 명시 지정이 작동 |
 | 3. 둘 다 | `@Primary` | `@Qualifier("smsSender")` | `SmsSender` ★ | **`@Qualifier` 가 `@Primary` 를 이김** |
 
-### 실행 명령
-
-```bash
-./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s2.Stage2PrimaryConflict
-```
-
 ### 해석
 
 `@Primary` 는 "후보가 여러 개 남았을 때의 tiebreak" 역할이고, `@Qualifier` 는 "후보를 1개로 강제 지정" 한다.  
@@ -460,5 +413,171 @@ public Dispatcher(Map<String, NotificationSender> senders) { ... }
 
 `@Primary` 는 "묵시적 기본값" 이라 향후 다른 구현체 추가 시 의도와 다른 곳에 주입될 수 있다.  
 규모가 커질수록 `@Qualifier` 명시가 안전.
+
+-------------------------------------------------------------------------------
+
+## STAGE 3-1 - 부팅 시간 측정 (순수 자바 / AnnotationConfig / Spring Boot)
+
+날짜: 2026-05-29  
+실행 클래스: `stage.s3.Stage3_A_Pure`, `stage.s3.Stage3_B_Spring`, `stage.s3.Stage3_C_Boot`  
+환경: Java 21 (Corretto 21.0.6), Spring Boot 3.4.1, IntelliJ Gradle run
+> 같은 도메인 객체 묶음 (DataSource + 4 sender + Repository + Service) 을 3가지 방식으로 띄워서 컨테이너 오버헤드를 비교한다. 각 main 안에서 5회 측정 + 워밍업 1회 제외 4회 평균.
+
+### 측정 방법 노트
+
+- 같은 JVM 안에서 연속 5회 측정 → 첫 회는 클래스 로딩 / JIT cold 비용 포함. 워밍업 1회 제외하고 평균.
+- `SchemaBootstrap` 은 측정 대상에서 제외 — `@PostConstruct` 에서 DDL 실행해서 DB 의존성 끼면 측정 노이즈.
+- `HikariDataSource` 는 `initializationFailTimeout=-1` 로 연결 시도 지연 → 부팅 측정에 DB 안 필요.
+- Spring Boot C 는 자동 설정 대부분 활성. JPA / Redis 만 exclude.
+
+### 실측값 (ms)
+
+| 방식 | 1회 (cold) | 2회 | 3회 | 4회 | 5회 | 워밍업 제외 평균 |
+|---|---|---|---|---|---|---|
+| A. 순수 자바 직접 `new` | 215.937 | 0.824 | 0.878 | 0.701 | 0.588 | **0.748** |
+| B. `AnnotationConfigApplicationContext` | 550.914 | 14.882 | 11.330 | 10.626 | 9.871 | **11.677** |
+| C. `SpringApplication.run` | 1447.762 | 206.337 | 168.870 | 177.063 | 169.522 | **180.448** |
+
+### 해석
+
+| 비교 | 평균 비율 |
+|---|---|
+| A vs B | 약 15.6배 — Spring 컨테이너 (Bean 등록 / 의존성 그래프 해석 / 라이프사이클 후처리) 오버헤드 |
+| B vs C | 약 15.5배 — `@EnableAutoConfiguration` 이 켜는 자동 설정 묶음 비용 |
+| A vs C | 약 241배 — 순수 자바 대비 Spring Boot 전체 오버헤드 |
+
+- 본인 도메인이 작아도 Spring Boot 의 부팅 시간은 100~200ms 단위로 자동 설정이 결정한다.
+- A 의 cold 측정 (215ms) 은 HikariCP / JDBC 드라이버 클래스 로딩 비용이 대부분. 이후 4회는 1ms 이하 — 순수 객체 생성 자체는 매우 싸다.
+- B 의 cold (550ms) 은 Spring 컨테이너 클래스 로딩 + reflection 메타데이터 구축. 이후 4회는 10~15ms 로 안정.
+- C 의 cold (1.4초) 는 Spring Boot 의 1회성 startup 비용. 이후 4회는 170~206ms 로 안정.
+
+-------------------------------------------------------------------------------
+
+## STAGE 3-2 - Bean 수 측정 (3 케이스)
+
+날짜: 2026-05-29  
+실행 클래스: `stage.s3.Stage3_B_Spring`, `stage.s3.Stage3_C_Boot`
+> 자동 설정이 없는 빈 컨테이너 → 본인 도메인만 → Spring Boot 자동 설정 포함 순서로 Bean 수가 어떻게 늘어나는지 관찰.
+
+### 실측값
+
+| 케이스 | 컨테이너 | Bean 수 | 증가분 |
+|---|---|---|---|
+| Empty `@Configuration` | `AnnotationConfigApplicationContext` | 7 | — (Spring 인프라만) |
+| Notification 도메인 추가 | `AnnotationConfigApplicationContext` | 15 | +8 (도메인 7 + `notificationDomainConfig` 1) |
+| `@SpringBootApplication` | `SpringApplication.run` (JPA/Redis exclude) | 144 | +129 (`@EnableAutoConfiguration` 묶음) |
+
+### 도메인 추가 시 등록된 Bean 7개
+
+`email`, `smsSender`, `push`, `slackSender`, `notificationLogRepository`, `notificationService`, `dataSource` (8번째는 `notificationDomainConfig` 자체)
+
+### Stage 1-4 와의 차이
+
+Stage 1-4 의 측정값 (`@SpringBootApplication` 99 beans) 와 Stage 3-1 C 의 측정값 (144 beans) 가 다른 이유:
+
+- **Stage 1-4 의 `Stage1BootCount`**: `DataSourceAutoConfiguration`, `HibernateJpaAutoConfiguration`, `RedisAutoConfiguration` 3개를 exclude → DataSource 자동 등록 포함 일체 안 함
+- **Stage 3-1 C 의 `Stage3_C_Boot`**: `HibernateJpaAutoConfiguration`, `JpaRepositoriesAutoConfiguration`, `RedisAutoConfiguration`, `RedisRepositoriesAutoConfiguration` 4개만 exclude → **`DataSourceAutoConfiguration` 은 활성** → application.yml 의 datasource 설정으로 HikariPool 자동 구성 + Spring JDBC 인프라 Bean 들이 더 등록됨
+
+같은 `@SpringBootApplication` 이라도 exclude 정책 1줄 차이가 Bean 수 45개 차이로 드러난다.
+
+### 자동 설정 Bean 샘플 (Stage 3-1 C 출력)
+
+```
+- AutoConfigurationPackages
+- PropertyPlaceholderAutoConfiguration
+- SslAutoConfiguration
+- applicationTaskExecutor
+- TaskExecutionAutoConfiguration
+- JmxAutoConfiguration
+- SpringApplicationAdminJmxAutoConfiguration
+- AopAutoConfiguration$AspectJAutoProxyingConfiguration$CglibAutoProxyConfiguration
+- AopAutoConfiguration$AspectJAutoProxyingConfiguration
+- AopAutoConfiguration
+```
+
+### 해석
+
+- 본인이 작성한 Bean 은 7개뿐이지만 `@SpringBootApplication` 켜는 순간 클래스패스 기반으로 100~140개의 인프라 Bean 이 자동 등록된다.
+- exclude 정책이 부팅 시간뿐 아니라 Bean 수에도 즉시 영향. 측정 비교 시에는 exclude 정책을 통일해야 fair 함.
+
+-------------------------------------------------------------------------------
+
+## STAGE 3-3 - 싱글톤 vs 프로토타입 스코프 (생성자 호출 카운트)
+
+날짜: 2026-05-29  
+실행 클래스: `stage.s3.Stage3Scope`
+> 같은 `CountingBean` 을 두 ApplicationContext 에 각자 다른 스코프로 등록 후 `ctx.getBean()` 을 1000회 호출. 생성자 호출 횟수 = `AtomicInteger` 카운터로 측정.
+
+### 실측값
+
+| 스코프 | refresh 직후 카운터 | 1000회 `getBean()` 후 카운터 | 의미 |
+|---|---|---|---|
+| `singleton` (기본) | 1 | 1 | 부팅 시점에 1번 생성, 이후 모든 `getBean` 은 같은 인스턴스 반환 |
+| `prototype` | 0 | **1000** | 부팅 시점엔 인스턴스 안 만듦, `getBean` 호출마다 새 인스턴스 |
+
+### 예상과의 차이 (학습 포인트)
+
+- **예상**: 프로토타입 결과가 1001 (refresh 시 1회 + getBean 1000회)
+- **실측**: 1000 — 프로토타입은 refresh 시점에 **인스턴스를 안 만든다**. Bean 정의만 등록되고, 첫 `getBean` 부터 매번 새로 생성.
+- 싱글톤의 refresh 후 카운터가 1 인 점과 대비. 싱글톤은 eager 생성, 프로토타입은 on-demand 생성.
+
+### 해석
+
+- 싱글톤은 Spring 의 기본 스코프 — 컨테이너 부팅 시 1번 만들고 이후 모든 의존성 주입 / `getBean` 에서 같은 인스턴스를 공유.
+- 프로토타입은 `getBean` 마다 새 인스턴스 — 상태가 있는 객체 (요청별 변경되는 데이터) 에 적합. 단 `@PreDestroy` 미호출, 컨테이너가 라이프사이클 끝까지 책임 X.
+- 멀티스레드 안전성은 **상태가 없는 싱글톤** 이 가장 안전. 상태가 있다면 프로토타입 or `ThreadLocal` or 명시적 동기화.
+
+-------------------------------------------------------------------------------
+
+## STAGE 3-4 - `@Lazy` 전후 부팅 시간
+
+날짜: 2026-05-29  
+실행 클래스: `stage.s3.Stage3Lazy`
+> 의도적으로 무거운 `HeavyBean` (생성자에서 `Thread.sleep(2000ms)`) 을 만들고, Eager / `@Lazy` 두 케이스의 부팅 시간 + 첫 `getBean` 비용 + 두 번째 `getBean` 비용을 비교.
+
+### 실측값
+
+| 케이스 | 부팅 시간 | 첫 `getBean` | 두 번째 `getBean` |
+|---|---|---|---|
+| Eager (기본) | **2511 ms** | 0 ms | — |
+| `@Lazy` | **11 ms** | **2012 ms** | 0 ms (싱글톤 캐시) |
+
+### 해석
+
+- **부팅 시간**: Eager 가 Lazy 보다 2500ms 더 느림 (`HeavyBean` 의 2초 sleep + 생성 오버헤드).
+- **첫 `getBean`**: Eager 는 이미 생성된 인스턴스 반환 → 0ms. Lazy 는 그 시점에 생성 → 2012ms.
+- **두 번째 `getBean`**: Lazy 도 한 번 만들어진 뒤엔 싱글톤이라 캐시. 이후엔 0ms.
+- 총 비용은 동일 (어디서 흡수할지 차이) 이지만 **누가 그 비용을 부담하는가** 가 다름.
+
+### 트레이드오프
+
+| 항목 | Eager (기본) | `@Lazy` |
+|---|---|---|
+| 부팅 시간 | 느림 | 빠름 |
+| 부팅 시점 오류 감지 | O (DB 연결 실패 등 즉시 발견) | X (첫 사용 시점에 발견) |
+| 첫 사용자의 비용 | 0 | 무거운 객체 생성 비용 흡수 |
+| 워밍업 필요성 | 불필요 | 권장 (헬스체크 / 첫 호출 캐싱) |
+
+### 면접 답변 한 줄
+
+- "`@Lazy` 의 부작용은?"
+- **"부팅은 빨라지지만 첫 사용자가 객체 생성 비용을 부담한다. 또 Bean 생성 시 발생할 오류 (DB 연결 실패 등) 가 부팅 시점에 안 잡히고 런타임에 터진다. 캐시 워밍업 또는 헬스체크로 보완 필요."**
+
+-------------------------------------------------------------------------------
+
+## STAGE 3 종합 표
+
+| 항목 | 측정값 | 비고 |
+|---|---|---|
+| 순수 자바 부팅 (워밍 평균) | 0.748 ms | baseline |
+| `AnnotationConfigApplicationContext` 부팅 | 11.677 ms | Spring 컨테이너 오버헤드 ×15 |
+| `SpringApplication.run` 부팅 | 180.448 ms | Spring Boot 자동 설정 ×15 |
+| Empty `@Configuration` Bean 수 | 7 | Spring 인프라만 |
+| Notification 도메인 추가 Bean 수 | 15 | 도메인 + dataSource + config |
+| `@SpringBootApplication` Bean 수 | 144 | 자동 설정 묶음 |
+| 싱글톤 1000회 `getBean` | 생성자 1회 | 부팅 시 1번 |
+| 프로토타입 1000회 `getBean` | 생성자 1000회 | refresh 시 0번 + getBean 마다 1번 |
+| `@Lazy` 적용 전 부팅 | 2511 ms | HeavyBean 2초 포함 |
+| `@Lazy` 적용 후 부팅 | 11 ms | 첫 getBean 시 2012 ms |
 
 -------------------------------------------------------------------------------
