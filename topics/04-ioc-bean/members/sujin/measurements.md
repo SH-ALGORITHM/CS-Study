@@ -581,3 +581,122 @@ Stage 1-4 의 측정값 (`@SpringBootApplication` 99 beans) 와 Stage 3-1 C 의 
 | `@Lazy` 적용 후 부팅 | 11 ms | 첫 getBean 시 2012 ms |
 
 -------------------------------------------------------------------------------
+
+## STAGE 4-1 / 4-2 - 순환 참조 재현 (생성자 / 필드 / 세터)
+
+날짜: 2026-05-29  
+실행 클래스: `stage.s4.Stage4Circular`
+> A → B → A 의존성을 생성자 / 필드 / 세터 3가지 방식으로 만들고, Spring Boot 2.6+ 의 디폴트 동작 (`spring.main.allow-circular-references=false`) 을 시뮬레이션 (`setAllowCircularReferences(false)`) 한 뒤 부팅 결과를 비교한다.
+
+### 컨테이너 구성
+
+- `AnnotationConfigApplicationContext` + `ctx.register(...)` 로 인너 `@Component` 클래스 명시 등록
+- `getDefaultListableBeanFactory().setAllowCircularReferences(false)` 로 Boot 2.6+ 동작 흉내
+- 인너 클래스라 `ComponentScan` 안 켜면 자동 등록 X → 다른 시연 영향 없음
+
+### 관찰 결과
+
+| 주입 방식 | 결과 | 예외 root cause | 메시지 핵심 |
+|---|---|---|---|
+| 생성자 | 부팅 실패 | `BeanCurrentlyInCreationException` | `Requested bean is currently in creation: Is there an unresolvable circular reference ...` |
+| 필드 (`@Autowired`) | 부팅 실패 | `BeanCurrentlyInCreationException` | 동일 |
+| 세터 (`@Autowired`) | 부팅 실패 | 동일 | 동일 |
+
+세 케이스 모두 `UnsatisfiedDependencyException` 로 wrap 된 뒤 root cause 가 `BeanCurrentlyInCreationException`. 메시지는 `A → B → A` 의 마지막 `A` 를 만들려는 시점에 "이미 생성 중" 임을 알림.
+
+### 메커니즘 차이 (allow=true 일 때의 동작은 STAGE 4-3 에서)
+
+- **생성자 순환**: 메커니즘상 항상 실패. A 만들려면 B 필요, B 만들려면 A 필요 — 닭-달걀.
+- **필드 / 세터 순환**: Spring 의 *early reference* (불완전 객체 참조) 메커니즘으로 `allow=true` 시 통과 가능. 다만 Spring Boot 2.6+ 가 부팅 안전성을 위해 디폴트로 차단.
+
+### 해석
+
+- 같은 순환이라도 생성자 vs 필드 / 세터 의 메커니즘 차이가 부팅 실패 시점/원인을 다르게 만든다.
+- 부팅 시점에 *모든* 케이스를 잡으려고 Spring Boot 2.6+ 이 `allow=false` 를 디폴트로 강제 — 런타임에 부분 초기화 객체로 인한 NPE 발생을 미리 막으려는 의도.
+
+-------------------------------------------------------------------------------
+
+## STAGE 4-3 - 순환 참조 해결 3가지
+
+날짜: 2026-05-29  
+실행 클래스: `stage.s4.Stage4Resolve`
+> baseline (생성자 순환 + allow=false → 실패) + 해결 3가지 (a)(b)(c) 를 같은 main 안에서 비교.
+
+### 관찰 결과
+
+| 케이스 | 변경 내용 | allow 설정 | 부팅 결과 |
+|---|---|---|---|
+| baseline | `OriginalA(OriginalB)` ↔ `OriginalB(OriginalA)` 생성자 순환 그대로 | false | 실패 ✔ `BeanCurrentlyInCreationException` |
+| **(a) 설계 재검토** | 공통 책임을 `SharedC` 로 추출. `RedesignedA(SharedC)` + `RedesignedB(SharedC)` | false | 성공 ✔ |
+| **(b) `@Lazy`** | `LazyA(@Lazy LazyB)` — 한쪽 생성자 인자에만 `@Lazy` | false | 성공 ✔ |
+| **(c) 세터 + `allow=true`** | `SetterA.setB(SetterB)` ↔ `SetterB.setA(SetterA)` | **true** | 성공 ✔ |
+
+### (b) `@Lazy` 의 프록시 주입 확인
+
+`LazyA` 의 생성자 인자 출력:
+
+```
+[LazyA] constructor — b proxy class=Stage4Resolve$LazyB$$SpringCGLIB$$0
+[LazyB] constructor — a=LazyA
+```
+
+- `LazyA` 에 주입된 `b` 는 실제 `LazyB` 가 아니라 **CGLIB 프록시** (`...$$SpringCGLIB$$0`)
+- 이후 `LazyB` 가 실제로 만들어질 때 `LazyA` 인자는 이미 완성된 실제 인스턴스 (`a=LazyA`)
+- 첫 호출 시점에 프록시가 실제 `LazyB` 를 lazy resolve
+
+### (c) 세터의 early reference 메커니즘 확인
+
+`Setter` 케이스의 setter 호출 순서:
+
+```
+[SetterB] setA — a=SetterA
+[SetterA] setB — b=SetterB
+```
+
+- `SetterA` 생성 → 의존성 처리 시 `setB(SetterB)` 호출하려고 `SetterB` 만들기 시작
+- `SetterB` 생성 → 의존성 처리 시 `setA(SetterA)` 호출 — 이때 `SetterA` 는 **아직 setB 처리 전** 이지만 객체 자체는 만들어진 상태 → early reference 로 주입
+- `SetterB` 완성 → 돌아와서 `SetterA.setB(SetterB)` 호출 → `SetterA` 완성
+- 그래서 출력에서 `SetterB.setA` 가 먼저, `SetterA.setB` 가 나중. Spring 의 *two-stage initialization* (객체 생성과 의존성 주입 분리) 이 만든 결과.
+
+### 메커니즘 한 줄 요약
+
+| 해결책 | 통과 비밀 |
+|---|---|
+| (a) 설계 재검토 | 의존성 그래프 자체를 DAG (Directed Acyclic Graph) 로 만들어서 순환 없음 |
+| (b) `@Lazy` | 생성자 인자를 프록시로 대체 → A 만들 때 B 는 프록시면 충분 → 닭-달걀 해소 |
+| (c) 세터 + `allow=true` | 객체 생성 (생성자) 과 의존성 주입 (세터) 을 분리 → early reference 로 순환 깨기 |
+
+### 트레이드오프
+
+| 해결책 | 장점 | 단점 |
+|---|---|---|
+| (a) 설계 재검토 | 근본 해결, 의존성 명확 | 클래스 수 증가, 리팩토링 비용 |
+| (b) `@Lazy` | 1줄 추가로 해결 | "왜 이 의존성만 lazy?" 코드 냄새, 프록시 동작 이해 필요 |
+| (c) `allow=true` | 옛 코드 호환 | 부팅 시점 검증 손실, 부분 초기화로 NPE 가능, smell ↑ |
+
+### 면접 답변
+
+- **"순환 참조가 부팅에서 잡혔다. 어떻게 해결할까?"**
+  → "먼저 `A → B → A` 라는 의존성이 정말 필요한지 본다. 보통 공통 책임을 추출해서 `SharedC` 로 분리하면 `A → C ← B` 의 DAG 가 되고 순환이 깨진다. (a) 가 가장 권장. 시간이 없을 때만 (b) `@Lazy` 로 임시 회피. (c) 의 `allow=true` 는 옛 코드 호환용이고 부팅 안전성을 잃으므로 피한다."
+
+- **"`@Lazy` 가 어떻게 순환을 깨나?"**
+  → "Spring 이 의존성 자리에 실제 객체 대신 프록시를 주입한다. CGLIB 프록시라서 자식 클래스 형태이고, 첫 메서드 호출 시점에 실제 Bean 을 lazy 가져온다. 그래서 A 의 생성자가 끝나는 시점엔 B 가 아직 안 만들어져도 문제 없음."
+
+- **"Spring Boot 2.6+ 가 왜 `allow-circular-references=false` 로 디폴트를 바꿨나?"**
+  → "필드/세터 순환이 부팅엔 통과해도 런타임에 부분 초기화 객체로 NPE 나는 경우가 있었다. 늦게 발견되니 비용이 컸다. '의존성 그래프 자체가 DAG 여야 한다' 는 강제로 부팅 시점에 잡게 한 것."
+
+-------------------------------------------------------------------------------
+
+## STAGE 4 종합 표
+
+| 항목 | 결과 |
+|---|---|
+| 생성자 순환 + allow=false | 부팅 실패 — `BeanCurrentlyInCreationException` |
+| 필드 순환 + allow=false | 부팅 실패 — 동일 |
+| 세터 순환 + allow=false | 부팅 실패 — 동일 |
+| 해결 (a) SharedC 분리 + allow=false | 부팅 성공 ✔ |
+| 해결 (b) `@Lazy` + allow=false | 부팅 성공 ✔, `LazyA.b` = CGLIB 프록시 |
+| 해결 (c) 세터 + allow=true | 부팅 성공 ✔, setter 호출 순서로 early reference 확인 |
+| 권장 순위 | (a) 설계 재검토 ≫ (b) `@Lazy` > (c) `allow=true` |
+
+-------------------------------------------------------------------------------
