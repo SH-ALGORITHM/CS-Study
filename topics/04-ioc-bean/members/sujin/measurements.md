@@ -272,3 +272,193 @@ STAGE 1-2에서 확인한 `@Bean`의 존재 이유가 여기서 바로 이어진
 4주차 방식에서는 `DataSource`, `RedisClient`가 Spring Bean이 되므로, 다른 Bean에 주입할 수 있고 컨테이너 종료 시 정리 메서드도 자동 호출된다.
 
 -------------------------------------------------------------------------------
+
+## STAGE 2-3 - 주입 방식 3가지 비교 (생성자 / 필드 / 세터)
+
+날짜: 2026-05-29  
+실행 클래스: `stage.s2.Stage2InjectionTypes`
+> 같은 `NotificationSender` 의존성을 생성자 / 필드 / 세터 3가지 방식으로 받는 클래스를 동일 컨테이너에 띄우고, `final` 가능 여부 / 컨테이너 없이 `new` 했을 때 동작 / 테스트 mock 주입 코드 길이를 비교한다.
+
+### 컨테이너 구성
+
+- `AnnotationConfigApplicationContext` + `InjectionConfig` 직접 등록 (Spring Boot 자동 설정 사용 안 함)
+- `EmailSender` 는 `@ComponentScan` 대신 `@Bean(name = "email")` 로 1회만 등록
+- 같은 `email` Bean 이 3개 소비자 클래스에 주입되는지 검증하려는 의도
+
+### 관찰 결과 - 라이프사이클 순서
+
+- `EmailSender` constructor → `EmailSender` `@PostConstruct`
+- `CtorInjected` constructor 호출 (sender 인자 전달)
+- `SetterInjected.setSender(...)` 호출
+- (`FieldInjected` 는 리플렉션 주입이라 별도 출력 없음)
+- `context.close()` 시 `EmailSender` `@PreDestroy`
+
+### 관찰 결과 - 싱글톤 검증 (같은 Bean 이 3 곳에 주입됐는가)
+
+| 비교 | 결과 |
+|---|---|
+| `ctor.sender   == email Bean` | true |
+| `field.sender  == email Bean` | true |
+| `setter.sender == email Bean` | true |
+
+세 클래스 모두 컨테이너 안의 같은 `email` Bean 인스턴스를 가리킨다. Spring 의 기본 스코프 (싱글톤) 가 작동했음.
+
+### 관찰 결과 - 컨테이너 없이 `new` 했을 때
+
+| 방식 | `new` 직후 동작 | 원인 |
+|---|---|---|
+| 생성자 | 정상 - `[ctorNew]` 메시지가 정상 전송됨 | 생성자 파라미터가 의존성을 강제 |
+| 필드 | `NullPointerException` 발생 | `@Autowired` 가 리플렉션 주입이라 컨테이너 없이는 `sender == null` |
+| 세터 | `NullPointerException` 발생 | `setSender()` 호출 전에는 `sender == null` |
+
+### 방식별 비교 표
+
+| 항목 | 생성자 주입 | 필드 주입 | 세터 주입 |
+|---|---|---|---|
+| `final` 가능 | O | X (리플렉션 주입이 final 필드 못 채움) | X (setter 가 재할당) |
+| 테스트 mock 주입 라인 | 1줄 - `new Target(mock)` | 2~3줄 - `new Target() + ReflectionTestUtils.setField(...)` | 2줄 - `new Target() + target.setSender(mock)` |
+| 컨테이너 없이 사용 가능 | O | X (NPE) | X (setter 호출 전 NPE) |
+| 순환 참조 감지 시점 | 부팅 시점 즉시 (`BeanCurrentlyInCreationException`) | Spring Boot 2.6+ 부팅 실패. 옛 버전은 런타임 NPE 가능 | 동일 |
+| 선택적 의존성 표현 | 어색함 (오버로드 필요) | 가능 (`required = false`) | 가장 자연스러움 |
+
+### 실행 명령
+
+```bash
+./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s2.Stage2InjectionTypes
+```
+
+### 해석
+
+생성자 주입은 (a) 불변성 - `final` 보장, (b) 명시성 - 의존성이 시그니처에 드러남, (c) 부팅 시점에 순환 참조 감지, 3가지를 동시에 제공하므로 기본은 생성자 주입을 사용한다.
+
+필드 주입은 코드는 가장 짧지만 `final` 불가 + 리플렉션 의존 + 컨테이너 없이 사용 불가 + 테스트 시 추가 코드 (`ReflectionTestUtils`) 가 필요하므로 비권장이다.
+
+세터 주입은 선택적 의존성 (예: `required = false`) 표현에는 자연스럽지만, 필수 의존성에 쓰면 객체 생성 직후 잠시 `null` 상태가 존재한다.
+
+### Bean 이름 메모
+
+`@Component("email")` 처럼 이름을 명시하면 Bean 이름이 그대로 `"email"` 이 된다.  
+이름을 명시하지 않은 `@Component` 만 붙으면 Bean 이름은 클래스명 첫 글자만 소문자로 바꾼 `"emailSender"` 가 된다.  
+STAGE 2-4 의 `Map<String, NotificationSender>` 자동 주입에서 이 차이가 곧 키 차이로 드러난다.
+
+-------------------------------------------------------------------------------
+
+## STAGE 2-4 - 다중 구현체 + `@Qualifier` / `Map<String, NotificationSender>`
+
+날짜: 2026-05-29  
+실행 클래스: `stage.s2.Stage2Qualifier`, `stage.s2.Stage2MapInjection`
+> 같은 타입 `NotificationSender` Bean 4개 (Email / Sms / Push / Slack) 가 등록된 상태에서, `@Qualifier` 명시 주입과 `Map<String, NotificationSender>` 자동 주입 두 방식을 비교한다. 의도적으로 Bean 이름 정책을 다양화해서 디폴트 이름 vs 명시 이름 차이가 Map 의 키 차이로 드러나는지 관찰한다.
+
+### Bean 이름 정책 (의도적으로 4가지 섞음)
+
+| 클래스 | 어노테이션 | Bean 이름 | 이유 |
+|---|---|---|---|
+| `EmailSender` | `@Component("email")` | `email` | 명시 |
+| `SmsSender` | `@Component` | `smsSender` | 디폴트 (클래스명 camelCase) |
+| `PushSender` | `@Component("push")` | `push` | 명시 |
+| `SlackSender` | `@Component` | `slackSender` | 디폴트 |
+
+### Case A. `@Qualifier` 없이 같은 타입 1개 주입 시도 → 부팅 실패
+
+- 같은 타입 Bean 이 4개라 후보를 좁히지 못함
+- `UnsatisfiedDependencyException` 의 root cause 가 `NoUniqueBeanDefinitionException`
+- 메시지: "expected single matching bean but found 4: email, smsSender, push, slackSender"
+- 해결책: `@Qualifier` 명시 주입 또는 `@Primary` (다음 STAGE 2-5 에서 비교)
+
+### Case B. `@Qualifier` 명시 주입
+
+| Consumer | `@Qualifier` | 주입된 sender |
+|---|---|---|
+| `emailConsumer` | `"email"` | `EmailSender` |
+| `smsConsumer` | `"smsSender"` | `SmsSender` |
+| `pushConsumer` | `"push"` | `PushSender` |
+| `slackConsumer` | `"slackSender"` | `SlackSender` |
+
+`@Qualifier` 의 값은 **Bean 이름** 이다. 명시 이름 (`"email"`, `"push"`) 이든 디폴트 이름 (`"smsSender"`, `"slackSender"`) 이든 정확히 일치해야 한다.
+
+### `Map<String, NotificationSender>` 자동 주입
+
+Spring 은 같은 타입 Bean 이 여러 개일 때 `Map<BeanName, Bean>` 형태로 한꺼번에 받을 수 있다.
+
+```java
+public Dispatcher(Map<String, NotificationSender> senders) { ... }
+```
+
+주입 결과:
+
+| 키 | 값 |
+|---|---|
+| `email` | `EmailSender` |
+| `smsSender` | `SmsSender` |
+| `push` | `PushSender` |
+| `slackSender` | `SlackSender` |
+
+`dispatcher.dispatch("email", ...)` / `dispatch("push", ...)` 는 정상 동작.  
+`dispatcher.dispatch("sms", ...)` 는 `Map.get` 이 `null` 을 반환해서 "등록된 sender 없음" 으로 안내 — 디폴트 이름은 `"smsSender"` 이지 `"sms"` 가 아니라는 점을 직접 확인.
+
+### 실행 명령
+
+```bash
+./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s2.Stage2Qualifier
+./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s2.Stage2MapInjection
+```
+
+### 해석
+
+같은 타입 Bean 이 여러 개일 때 Spring 은 후보를 자동으로 좁히지 못한다.  
+해결책은 (a) `@Qualifier` 로 Bean 이름 명시, (b) `@Primary` 로 기본값 표시, (c) `Map<String, T>` 로 전부 받아서 직접 분기 — Strategy 패턴 자동화.
+
+`Map<String, NotificationSender>` 자동 주입은 Strategy 패턴을 가장 자연스럽게 표현한다. 새 sender 가 추가되면 클래스 1개만 추가하면 되고 (OCP), Dispatcher 코드는 변경 없다.
+
+`@Component` 의 이름을 일관성 있게 명시 또는 디폴트로 통일하는 편이 Map 키 매핑 실수를 줄인다. 본 학습에서는 차이를 보려고 일부러 섞었다.
+
+-------------------------------------------------------------------------------
+
+## STAGE 2-5 - `@Primary` vs `@Qualifier` 우선순위
+
+날짜: 2026-05-29  
+실행 클래스: `stage.s2.Stage2PrimaryConflict`
+> 같은 타입 Bean 2개 (email / smsSender) 상태에서 `@Primary` 와 `@Qualifier` 가 동시에 있을 때 어느 쪽이 이기는지 3가지 케이스로 확인한다.
+
+### 케이스 설계
+
+3가지 케이스를 각각 별도 `@Configuration` + 별도 `ApplicationContext` 로 격리해서 결과를 비교한다.  
+`EmailSender` 클래스 자체에는 `@Primary` 를 영구 추가하지 않고, 케이스별 `@Bean` 메서드에만 표시 — 다른 시연 (Stage2Layering 등) 에 영향 안 주려는 의도.
+
+### 관찰 결과
+
+| Case | `email` Bean | Consumer 시그니처 | 주입된 sender | 우선 규칙 |
+|---|---|---|---|---|
+| 1. `@Primary` 만 | `@Primary` | `(NotificationSender sender)` — 명시 X | `EmailSender` | `@Primary` 가 "기본값" 으로 작동 |
+| 2. `@Qualifier` 만 | (없음) | `@Qualifier("smsSender")` | `SmsSender` | 명시 지정이 작동 |
+| 3. 둘 다 | `@Primary` | `@Qualifier("smsSender")` | `SmsSender` ★ | **`@Qualifier` 가 `@Primary` 를 이김** |
+
+### 실행 명령
+
+```bash
+./gradlew.bat :topics:04-ioc-bean:members:sujin:run --project-prop mainClass=stage.s2.Stage2PrimaryConflict
+```
+
+### 해석
+
+`@Primary` 는 "후보가 여러 개 남았을 때의 tiebreak" 역할이고, `@Qualifier` 는 "후보를 1개로 강제 지정" 한다.  
+`@Qualifier` 가 있으면 후보 단계에서 이미 1개로 좁혀지므로 `@Primary` 판단 단계 자체에 안 들어간다.  
+그래서 Case 3 처럼 둘 다 있어도 `@Qualifier` 가 이긴다.
+
+### 면접 답변 한 줄
+
+- "같은 타입 Bean 다수 + `@Primary` + `@Qualifier` 동시 사용 시 누가 이기나?"
+- **`@Qualifier` 가 이긴다. `@Primary` 는 후보가 여러 개일 때의 기본값이고, `@Qualifier` 는 후보를 명시 지정해서 이미 1개로 좁힌다.**
+
+### 사용 가이드 (실무 기준)
+
+| 상황 | 선택 |
+|---|---|
+| 같은 타입 구현체 중 "거의 항상 이걸 쓴다" 가 있음 | `@Primary` |
+| 호출 측 / 환경에 따라 다른 구현체를 명시적으로 골라야 함 | `@Qualifier` |
+| Strategy 패턴 (런타임에 키로 분기) | `Map<String, T>` 자동 주입 |
+
+`@Primary` 는 "묵시적 기본값" 이라 향후 다른 구현체 추가 시 의도와 다른 곳에 주입될 수 있다.  
+규모가 커질수록 `@Qualifier` 명시가 안전.
+
+-------------------------------------------------------------------------------
