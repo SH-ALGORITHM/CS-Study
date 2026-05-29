@@ -1,4 +1,6 @@
 package com.example.study.domain;
 
-public class DiscountPolicy {
+// 할인정책 인터페이스
+public interface DiscountPolicy {
+    int discount(int orderAmount);
 }

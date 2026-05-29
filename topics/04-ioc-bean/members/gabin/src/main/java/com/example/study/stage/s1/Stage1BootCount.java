@@ -14,7 +14,11 @@ import org.springframework.context.ConfigurableApplicationContext;
  * STAGE 1-4: @SpringBootApplication이 자동 등록하는 Bean 수 확인.
  */
 @SpringBootApplication(
-    scanBasePackages = "com.example.study",
+    scanBasePackages = {
+        "com.example.study.domain",
+        "com.example.study.service",
+        "com.example.study.sample"
+    },
     exclude = {
         DataSourceAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class,
