@@ -64,4 +64,10 @@ public class MeasurementLog {
         }
         return Path.of("measurements.md");
     }
+
+    // 콘솔 구분용
+    public static void title(String s) {
+        System.out.println();
+        System.out.println("=== " + s + " ===");
+    }
 }
