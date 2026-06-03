@@ -1,0 +1,84 @@
+- [06-04 02:13] JDK Dynamic Proxy 손 작성
+  - real.getClass(): stage.s1.Stage1JdkProxy$GreeterImpl
+  - proxy.getClass(): jdk.proxy1.$Proxy0
+  - proxy instanceof Greeter: true
+  - proxy instanceof GreeterImpl: false
+  - **proxy.greet("world") 호출**
+  - 결과: hello world
+- [06-04 02:15] CGLIB Proxy 손 작성
+  - proxy.getClass(): stage.s1.Stage1CglibProxy$Counter$$EnhancerByCGLIB$$f94e257f
+  - proxy instanceof Counter: true
+  - **proxy.next() 3 회 호출**
+- [06-04 02:16] Spring AOP 가 만든 프록시 확인
+  - TxService (@Transactional 있음): stage.s1.Stage1SpringProxy$TxService$$SpringCGLIB$$0
+  - PlainService (@Transactional 없음): stage.s1.Stage1SpringProxy$PlainService
+- [06-04 03:03] STAGE 2-1 Step 1+2 — 순진한 버전 함정 재현
+  - 초기 id=1 잔액: 10000.00
+  - 초기 id=2 잔액: 10000.00
+  - **transfer(1 → 2, 500) 실행, 중간에 예외 발생**
+  - **결과 확인 — 트랜잭션이 묶였다면 둘 다 그대로여야 함**
+  - id=1 잔액 (10000 그대로여야 함): 9500.00 // Aspect와 Repo의 커넥션이 달라 롤백 실패
+  - id=2 잔액 (10000 그대로여야 함): 10000.00
+  - **해석**
+- [06-04 03:05] STAGE 2-1 Step 3 — ThreadLocal 해결
+  - 초기 id=1 잔액: 10000.00
+  - 초기 id=2 잔액: 10000.00
+  - **transfer(1 → 2, 500) 실행, 중간에 예외 발생**
+  - **결과 확인 — ThreadLocal 의 conn 으로 묶였으므로 둘 다 그대로**
+  - id=1 잔액 (10000 으로 복원): 10000.00
+  - id=2 잔액 (10000 그대로): 10000.00
+  - **학습 포인트**
+- [06-04 03:16] STAGE 2-2 — @Order 양파 껍질 테스트
+  - **transfer(1 → 2, 100) 정상 실행**
+- [06-04 03:18] STAGE 2-2 — @Order 양파 껍질 테스트
+  - **transfer(1 → 2, 100) 정상 실행**
+- [06-04 03:29] STAGE 2-2 — @Order 양파 껍질 테스트
+  - **transfer(1 → 2, 100) 정상 실행**
+- [06-04 03:31] STAGE 2-3 — Pointcut 표현식 실습
+  - **svc.doWork("hi") 호출 — 4개 Pointcut 모두 매칭 예정**
+  - 최종 결과: processed: hi
+  - **학습 포인트**
+- [06-04 03:34] STAGE 2-4 — Advice 5 종 호출 순서
+  - **1. doSuccess() 호출 (정상)**
+  - **2. doFail() 호출 (예외)**
+- [06-04 03:36] STAGE 2-5 — @Audited 감사 로그 최종 확인
+  - **1. 정상 송금 케이스 — transfer(1 → 2, 200)**
+  - **2. 예외 발생 케이스 — transfer(1 → 2, 300, fail)**
+  - **최종 잔액 확인**
+  - id=1 잔액 (10000 - 200 = 9800): 9800.00
+  - id=2 잔액 (10000 + 200 = 10200): 10200.00
+  - **학습 포인트**
+- [06-04 03:40] STAGE 3-1 — AOP 오버헤드 측정 (100만 회)
+  - 일반 메서드 호출 (1M 회): 1 ms
+  - @Audited 메서드 호출 (1M 회): 1728 ms
+  - 순수 AOP 오버헤드: 1727 ms (172700.0%)
+  - 회당 추가 지연 시간: 1727.00 ns  // 비즈니스 로직 대비 무시 가능한 수준
+- [06-04 03:42] STAGE 3-2 — JDK vs CGLIB 1M 회 호출 비교
+  - 순수 호출: 5 ms
+  - JDK Proxy: 4 ms
+  - CGLIB Proxy: 8 ms
+  - **학습 포인트 (Java 21)**
+- [06-04 03:47] STAGE 3-3 — getClass() 판별 매트릭스
+  - 인터페이스 X + TX X: NoInterfaceNoTx
+  - 인터페이스 X + TX O: Stage3_3_GetClass$NoInterfaceWithTx$$SpringCGLIB$$0
+  - 인터페이스 O + TX X: HasInterfaceNoTx
+  - 인터페이스 O + TX O: Stage3_3_GetClass$HasInterfaceWithTx$$SpringCGLIB$$0
+  - **학습 포인트**
+- [06-04 03:51] STAGE 3-4 — AOP 내부 엔진(AutoProxy) 확인
+  - **스프링 내부(internal*) 및 AutoProxy 빈 목록**
+  - 검색된 내부 엔진 빈 개수: 13
+  - **학습 포인트**
+- [06-04 03:55] STAGE 4-1 — self-invocation 함정 재현
+  - svc.getClass() (바깥에서 본 나): OrderService$$SpringCGLIB$$0  // 외부 호출 시에만 프록시 작동 확인
+  - **svc.outerMethod(1L) 호출 시작**
+  - **학습 포인트**
+- [06-04 04:06] STAGE 4-2 — self-invocation 해결책 테스트
+  - **방법 (a) 자기 자신 주입 (@Autowired @Lazy)**
+  - **방법 (c) 클래스 분리 (가장 권장)**
+  - **학습 포인트**
+- [06-04 04:10] STAGE 4-3 — CGLIB 기술적 한계 테스트
+  - **1. normalMethod() - [TX] 로그가 보여야 함**
+  - **2. finalMethod() - [TX] 로그가 안 보여야 함**
+  - **3. privateMethod() - [TX] 로그가 안 보여야 함**
+  - **4. staticMethod() - [TX] 로그가 안 보여야 함**
+  - **학습 포인트**
