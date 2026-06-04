@@ -14,6 +14,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.expression.MethodBasedEvaluationContext;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.core.annotation.Order;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.TemplateParserContext;
@@ -47,6 +48,7 @@ import org.springframework.stereotype.Component;
  */
 @Aspect
 @Component
+@Order(1)   // Stage4 양파 껍질에서 가장 바깥 — 락 잡은 후 AuditAspect(@Order 2) 동작
 public class DistributedLockAspect {
 
     private static final String UNLOCK_LUA = """

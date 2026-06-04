@@ -26,6 +26,7 @@ public class TransferService {
     }
 
     @DistributedLock(key = "wallet:#{fromId}", ttlSeconds = 5)
+    @Audited(action = "TRANSFER")   // Stage4 양파 껍질 — @Order(1) Lock > @Order(2) Audit
     public void transfer(long fromId, long toId, BigDecimal amount) {
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
