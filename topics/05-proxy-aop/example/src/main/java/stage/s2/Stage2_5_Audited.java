@@ -7,9 +7,12 @@ import infra.MeasurementLog;
 import java.math.BigDecimal;
 import javax.sql.DataSource;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 
 /**
  * STAGE 2-5 — 본인 도메인 어노테이션 자작 적용.
@@ -20,7 +23,21 @@ import org.springframework.context.annotation.Bean;
  * <p>여기서는 AuditAspect 도 활성화 → MyTransactionalAspect(@Order 1) + AuditAspect(@Order 2)
  * 양파 껍질 동작 + 감사 로그 형식 확인.
  */
-@SpringBootApplication(scanBasePackages = {"stage.s2", "domain"})
+@Configuration
+@EnableAutoConfiguration
+@ComponentScan(
+    basePackages = {"stage.s2", "domain"},
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = {
+            Stage2_1_NaiveTrap.class,
+            Stage2_1_ThreadLocal.class,
+            Stage2_2_OrderChaining.class,
+            Stage2_3_Pointcut.class,
+            Stage2_4_FiveAdvice.class
+        }
+    )
+)
 public class Stage2_5_Audited {
 
     @Bean

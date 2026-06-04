@@ -10,8 +10,11 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -47,7 +50,21 @@ import java.lang.annotation.Target;
  * 5.2.6 이하에서는 메서드 선언 순서 의존 (비결정적).
  * 본인 출력을 위 표와 비교 → measurements.md 에 기록.
  */
-@SpringBootApplication(scanBasePackages = "stage.s2")
+@Configuration
+@EnableAutoConfiguration
+@ComponentScan(
+    basePackages = "stage.s2",
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = {
+            Stage2_1_NaiveTrap.class,
+            Stage2_1_ThreadLocal.class,
+            Stage2_2_OrderChaining.class,
+            Stage2_3_Pointcut.class,
+            Stage2_5_Audited.class
+        }
+    )
+)
 public class Stage2_4_FiveAdvice {
 
     @Target(ElementType.METHOD)

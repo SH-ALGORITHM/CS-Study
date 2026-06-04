@@ -6,7 +6,8 @@ import domain.OrderService;
 import infra.MeasurementLog;
 import javax.sql.DataSource;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -37,12 +38,17 @@ import org.springframework.context.annotation.FilterType;
  * <p>대비: 바깥에서 본 {@code svc.getClass()} = 프록시 / 안에서 본 {@code this.getClass()} = 원본.
  * 이 대비가 self-invocation 함정의 전부.
  */
-@SpringBootApplication(scanBasePackages = "stage.s4")
+@Configuration
+@EnableAutoConfiguration
 @ComponentScan(
     basePackages = {"stage.s4", "domain"},
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,
-        classes = domain.AuditAspect.class
+        classes = {
+            domain.AuditAspect.class,
+            Stage4_2_Resolve.class,
+            Stage4_3_CglibLimits.class
+        }
     )
 )
 public class Stage4_1_SelfInvocation {

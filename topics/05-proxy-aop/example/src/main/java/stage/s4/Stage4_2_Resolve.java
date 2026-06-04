@@ -7,7 +7,8 @@ import infra.MeasurementLog;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,12 +26,19 @@ import org.springframework.stereotype.Service;
  *   <li>(c) 클래스 분리 — 가장 권장. 근본 해결</li>
  * </ul>
  */
-@SpringBootApplication(scanBasePackages = "stage.s4")
+@Configuration
+@EnableAutoConfiguration
 @ComponentScan(
     basePackages = {"stage.s4", "domain"},
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,
-        classes = {domain.AuditAspect.class, domain.OrderService.class, domain.OrderRepository.class}
+        classes = {
+            domain.AuditAspect.class,
+            domain.OrderService.class,
+            domain.OrderRepository.class,
+            Stage4_1_SelfInvocation.class,
+            Stage4_3_CglibLimits.class
+        }
     )
 )
 public class Stage4_2_Resolve {

@@ -5,7 +5,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,15 @@ import java.lang.annotation.Target;
  *
  * <p>웜업 5,000 회 후 본 측정 1,000,000 회. JIT 컴파일 안정화 후의 실제 비용 측정.
  */
-@SpringBootApplication(scanBasePackages = "stage.s3")
+@Configuration
+@EnableAutoConfiguration
+@org.springframework.context.annotation.ComponentScan(
+    basePackages = "stage.s3",
+    excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
+        type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
+        classes = {Stage3_3_GetClass.class, Stage3_4_BeanPostProcessors.class}
+    )
+)
 public class Stage3_1_Overhead {
 
     @Target(ElementType.METHOD)

@@ -2,7 +2,8 @@ package stage.s3;
 
 import infra.MeasurementLog;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
@@ -28,7 +29,15 @@ import org.springframework.context.ConfigurableApplicationContext;
  * 딱 맞아떨어지지는 않음 (환경마다 다름). 4 주차 example 의 순수 AnnotationConfigApplicationContext
  * 와 비교하면 정확히 +1 차이.
  */
-@SpringBootApplication(scanBasePackages = "stage.s3")
+@Configuration
+@EnableAutoConfiguration
+@org.springframework.context.annotation.ComponentScan(
+    basePackages = "stage.s3",
+    excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
+        type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
+        classes = {Stage3_1_Overhead.class, Stage3_3_GetClass.class}
+    )
+)
 public class Stage3_4_BeanPostProcessors {
 
     public static void main(String[] args) {
