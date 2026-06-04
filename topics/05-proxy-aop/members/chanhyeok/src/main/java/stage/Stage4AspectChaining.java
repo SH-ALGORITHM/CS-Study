@@ -33,7 +33,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 @SpringBootApplication(scanBasePackages = {"domain", "infra"})
 public class Stage4AspectChaining {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         ConfigurableApplicationContext ctx = SpringApplication.run(Stage4AspectChaining.class, args);
 
         DataSource ds = ctx.getBean(DataSource.class);
