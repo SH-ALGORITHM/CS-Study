@@ -1073,7 +1073,7 @@ public class OrderEventListener {
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-금지 키워드 — STAGE 1 ~ 2 동안만 (30 분 검색 금지)
+금지 키워드 — STAGE 1 ~ 2 동안만 (검색 금지)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Spring Security 의 `@PreAuthorize` 내부 동작 (11 주차 보호)
 - AspectJ Load Time Weaving (LTW) — Spring AOP 의 런타임 위빙과 다름. 학습 범위 밖
@@ -1144,7 +1144,7 @@ public class OrderEventListener {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 막힐 때
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. 30 분 직접 시도 (`CLAUDE.md` 룰)
+1. 직접 시도 (`CLAUDE.md` 룰)
 2. AI 에 물어보기 — 3 단계 힌트만 받음 (코드 직답 X)
 3. 디스코드 `#질문` 채널 — 코드 + 본인 Aspect + 적용 대상 Service 함께
 

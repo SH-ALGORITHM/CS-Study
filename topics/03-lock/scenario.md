@@ -614,7 +614,7 @@ class Account {
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-금지 키워드 — STAGE 1~2 동안만 (30분 검색 금지)
+금지 키워드 — STAGE 1~2 동안만 (검색 금지)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 - `@Transactional` 어노테이션 / Spring `TransactionTemplate` (4 주차 보호)
 - Redisson `RLock` / Spring `@DistributedLock` (라이브러리 추상화 — 직접 손으로 SETNX 부터)
@@ -660,7 +660,7 @@ class Account {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 막힐 때
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. 30 분 직접 시도 (`CLAUDE.md` 룰)
+1. 직접 시도 (`CLAUDE.md` 룰)
 2. AI 에 물어보기 — 3 단계 힌트만 받음 (코드 직답 X)
 3. 디스코드 `#질문` 채널 — 코드 + 에러 + 본인 도메인 schema.sql 함께
 

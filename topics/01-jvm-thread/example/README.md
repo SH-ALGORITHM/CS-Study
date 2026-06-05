@@ -72,4 +72,4 @@ java -cp out Stage1Race
 
 - 본인 폴더(`members/{본인이름}/`)에 본인 도메인 코드 작성 — 여기 example/는 참고용
 - 측정 코드 중간에 `println` 절대 X — 출력 한 줄에 동기화 효과
-- AI에게 "이 코드 짜줘" 금지 — 본인이 시도 30분 후에 힌트 받기 (`CLAUDE.md` 룰)
+- AI에게 "이 코드 짜줘" 금지 — 본인이 시도 후 힌트 받기 (`CLAUDE.md` 룰)
