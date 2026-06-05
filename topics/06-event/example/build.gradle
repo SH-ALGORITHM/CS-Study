@@ -1,0 +1,38 @@
+// 6주차 example — Spring Event (publishEvent / @EventListener / @TransactionalEventListener / @Async)
+// 외부 의존성: Spring Boot 3.x (Spring 6.x 포함) + spring-boot-starter-jdbc + H2 (인메모리 DB)
+//             STAGE 4 (AOP vs Event 비교) 시 spring-boot-starter-aop 도 함께
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter:3.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc:3.2.0'
+
+    // STAGE 4 비교용 — 5 주차 @Audited (AOP) 와 6 주차 이벤트 결과 직접 비교
+    implementation 'org.springframework.boot:spring-boot-starter-aop:3.2.0'
+
+    // H2 인메모리 DB — STAGE 2 트랜잭션 결합 검증
+    runtimeOnly 'com.h2database:h2:2.2.224'
+}
+
+application {
+    mainClass = providers.gradleProperty('mainClass').orElse('stage.s1.Stage1_1_HelloEvent')
+}
+
+// -parameters: @EventListener(condition = "#event.amount > 1000") SpEL 안전장치 (5 주차에서 익힘).
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}

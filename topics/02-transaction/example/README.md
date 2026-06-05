@@ -85,5 +85,5 @@ STAGE 1 은 Java 코드가 아니라 psql / DBeaver 두 세션으로 손으로 �
 - 본인 폴더 (`members/{본인이름}/`) 에 본인 도메인 코드 작성 — 여기 example 은 참고용
 - 측정 코드 중간에 `println` / log 절대 X — 출력 한 줄에 동기화 효과 (1주차 룰)
 - `MeasurementLog.save()` 는 측정 끝난 후에 한 번만 호출
-- AI 에게 "이 코드 짜줘" 금지 — 본인이 시도 30 분 후에 힌트 받기 (`CLAUDE.md` 룰)
+- AI 에게 "이 코드 짜줘" 금지 — 본인이 시도 후 힌트 받기 (`CLAUDE.md` 룰)
 - HikariCP autoCommit 기본값은 `true` — `setAutoCommit(false)` 안 부르면 트랜잭션 안 쓴 것과 동일

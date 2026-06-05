@@ -126,6 +126,6 @@ STAGE 1 은 Spring Boot 마법 빼고 `AnnotationConfigApplicationContext` 를 �
 - 측정 코드 중간에 과도한 `println` X — 부팅 시간 측정값 왜곡
 - `MeasurementLog.save()` 는 측정 끝난 후 한 번만
 - **STAGE 3-1 부팅 시간** 은 같은 JVM 순차 측정 X — JIT 웜업 효과로 뒤쪽이 빨라 보임. 별도 main 5 회 실행 후 평균
-- AI 에게 "이 코드 짜줘" 금지 — 본인이 시도 30 분 후 힌트 받기 (`CLAUDE.md` 룰)
+- AI 에게 "이 코드 짜줘" 금지 — 본인이 시도 후 힌트 받기 (`CLAUDE.md` 룰)
 - Spring Boot 3.x = javax → **jakarta** 패키지. `jakarta.annotation.PostConstruct` 사용 (`javax` 아님)
 - `@Component` + `@Bean` 같은 클래스 중복 등록 X — `ConflictingBeanDefinitionException`

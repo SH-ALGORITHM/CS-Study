@@ -361,7 +361,7 @@ WHERE NOT granted OR mode LIKE '%Exclusive%';
   - `finally` 에서 `setAutoCommit(true)` (또는 원래 값) 복원? 안 하면 커넥션 풀에 어떤 영향?
   - 트랜잭션 시작 시점의 격리 수준 / 종료 시점의 정리
 
-> **힌트 (30 분 막혔을 때만 열기):** `SQLException` 은 checked exception 이라 `Runnable` 로는 못 받음. 두 갈래 — (1) checked exception 을 던질 수 있는 함수형 인터페이스를 직접 정의, (2) `RuntimeException` 으로 감싸기. 둘 다 시도해보고 차이 정리. 그래도 막히면 디스코드 `#질문`.
+> **힌트 (막혔을 때만 열기):** `SQLException` 은 checked exception 이라 `Runnable` 로는 못 받음. 두 갈래 — (1) checked exception 을 던질 수 있는 함수형 인터페이스를 직접 정의, (2) `RuntimeException` 으로 감싸기. 둘 다 시도해보고 차이 정리. 그래도 막히면 디스코드 `#질문`.
 
 > **2-1 단계를 건너뛰고 헬퍼부터 쓰지 말 것.** 손으로 5 번 반복한 후에 추출해야 헬퍼의 의미가 보인다. 4 주차에서 `@Transactional` 만났을 때 "내가 만든 헬퍼의 강화판" 으로 인식하는 게 학습 자산이다.
 
@@ -482,7 +482,7 @@ DETAIL: Process X waits for ShareLock on transaction Y; ...
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-금지 키워드 — STAGE 1~2 동안만 (30분 검색 금지)
+금지 키워드 — STAGE 1~2 동안만 (검색 금지)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 - `SELECT FOR UPDATE`, `SELECT FOR SHARE`, `LOCK TABLE` (3 주차 보호)
 - 비관적 락 / 낙관적 락 / `@Version` (3 주차 보호)
@@ -508,7 +508,7 @@ DETAIL: Process X waits for ShareLock on transaction Y; ...
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 막힐 때
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. 30 분 직접 시도 (`CLAUDE.md` 룰)
+1. 직접 시도 (`CLAUDE.md` 룰)
 2. AI 에 물어보기 — 3 단계 힌트만 받음 (코드 직답 X)
 3. 디스코드 `#질문` 채널 — 코드 + 에러 + 본인 도메인 schema.sql 함께
 4. 그래도 안 되면 운영자 @멘션 (모임 1 일 전부터)
