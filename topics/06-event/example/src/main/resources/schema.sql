@@ -1,0 +1,8 @@
+-- STAGE 2 (트랜잭션 + 이벤트) 검증용
+CREATE TABLE IF NOT EXISTS orders (
+    id BIGINT PRIMARY KEY,
+    amount DECIMAL(15, 2) NOT NULL,
+    placed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DELETE FROM orders;
