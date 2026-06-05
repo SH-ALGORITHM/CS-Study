@@ -1,5 +1,5 @@
-// 5주차 학습용 — Spring Boot 3.x + AOP / 도메인은 학습자가 선택
-// 가벼운 도메인 (감사 로그 / 재시도) 면 JDBC / H2 제거. 트랜잭션 자작 / 분산락 AOP 면 유지.
+// 5주차 학습 — 분산락 AOP (@DistributedLock 한 줄로 SETNX/Lua/finally 추출)
+// 3주차 P2P 송금 도메인 (PostgreSQL + Redis) 재사용 + Spring Boot AOP
 
 plugins {
     id 'java'
@@ -19,20 +19,18 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter:3.2.0'
     implementation 'org.springframework.boot:spring-boot-starter-aop:3.2.0'
-
-    // 트랜잭션 자작 / DB 쓰는 도메인 선택 시
     implementation 'org.springframework.boot:spring-boot-starter-jdbc:3.2.0'
-    runtimeOnly 'com.h2database:h2:2.2.224'
 
-    // 분산락 AOP (3 주차 회수) 선택 시
-    // implementation 'io.lettuce:lettuce-core:6.3.0.RELEASE'
+    // 3주차 인프라 그대로
+    implementation 'org.postgresql:postgresql:42.7.4'
+    implementation 'io.lettuce:lettuce-core:6.3.0.RELEASE'
 }
 
 application {
-    mainClass = providers.gradleProperty('mainClass').orElse('stage.Stage1')
+    mainClass = providers.gradleProperty('mainClass').orElse('stage.Stage1Before')
 }
 
-// -parameters: AspectJ 어노테이션 파라미터 바인딩 안전장치 (Spring 6.1+)
+// -parameters: AspectJ 어노테이션 파라미터 바인딩 + SpEL 안전장치 (Spring 6.1+)
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs << '-parameters'
 }

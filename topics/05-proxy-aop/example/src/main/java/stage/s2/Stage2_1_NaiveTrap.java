@@ -7,7 +7,8 @@ import infra.MeasurementLog;
 import java.math.BigDecimal;
 import javax.sql.DataSource;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -29,12 +30,22 @@ import org.springframework.context.annotation.FilterType;
  * <p>→ "Aspect 의 트랜잭션과 Repository 의 트랜잭션이 다르다" 를 직접 관찰.
  * <p>Stage2_1_ThreadLocal 가 같은 시나리오를 올바르게 해결.
  */
-@SpringBootApplication(scanBasePackages = "stage.s2")
+// 같은 패키지 stage.s2 의 다른 @SpringBootApplication 클래스를 스캔에서 제외
+// (안 하면 다른 stage 의 @Bean 까지 등록되어 빈 이름 충돌 / 의도 외 advice 활성화)
+@Configuration
+@EnableAutoConfiguration
 @ComponentScan(
     basePackages = {"stage.s2", "domain"},
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,
-        classes = domain.AuditAspect.class   // 출력 단순화 위해 제외
+        classes = {
+            domain.AuditAspect.class,
+            Stage2_1_ThreadLocal.class,
+            Stage2_2_OrderChaining.class,
+            Stage2_3_Pointcut.class,
+            Stage2_4_FiveAdvice.class,
+            Stage2_5_Audited.class
+        }
     )
 )
 public class Stage2_1_NaiveTrap {

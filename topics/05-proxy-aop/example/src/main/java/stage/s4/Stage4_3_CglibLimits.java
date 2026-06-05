@@ -2,7 +2,8 @@ package stage.s4;
 
 import infra.MeasurementLog;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,15 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>final 클래스 케이스는 코드로 활성화하면 컨테이너 부팅 자체가 실패하므로 주석으로만 명시.
  */
-@SpringBootApplication(scanBasePackages = "stage.s4")
+@Configuration
+@EnableAutoConfiguration
+@org.springframework.context.annotation.ComponentScan(
+    basePackages = "stage.s4",
+    excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
+        type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
+        classes = {Stage4_1_SelfInvocation.class, Stage4_2_Resolve.class}
+    )
+)
 public class Stage4_3_CglibLimits {
 
     // ===== final 클래스 케이스 =====

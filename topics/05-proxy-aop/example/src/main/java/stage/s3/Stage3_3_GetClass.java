@@ -2,7 +2,8 @@ package stage.s3;
 
 import infra.MeasurementLog;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +22,15 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Spring 5 까지 접미사는 EnhancerBySpringCGLIB$$randomHash. 6 부터 단순화.
  * 정확한 접미사는 버전마다 다르므로 직접 출력 확인.
  */
-@SpringBootApplication(scanBasePackages = "stage.s3")
+@Configuration
+@EnableAutoConfiguration
+@org.springframework.context.annotation.ComponentScan(
+    basePackages = "stage.s3",
+    excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
+        type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
+        classes = {Stage3_1_Overhead.class, Stage3_4_BeanPostProcessors.class}
+    )
+)
 public class Stage3_3_GetClass {
 
     // 케이스 1: 인터페이스 X + @Transactional X

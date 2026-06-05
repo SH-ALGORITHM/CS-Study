@@ -6,8 +6,11 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +19,21 @@ import org.springframework.stereotype.Service;
  *
  * <p>같은 메서드가 3 개 Pointcut 에 모두 매칭되면 advice 3 번 호출.
  */
-@SpringBootApplication(scanBasePackages = "stage.s2")
+@Configuration
+@EnableAutoConfiguration
+@ComponentScan(
+    basePackages = "stage.s2",
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = {
+            Stage2_1_NaiveTrap.class,
+            Stage2_1_ThreadLocal.class,
+            Stage2_2_OrderChaining.class,
+            Stage2_4_FiveAdvice.class,
+            Stage2_5_Audited.class
+        }
+    )
+)
 public class Stage2_3_Pointcut {
 
     @Service

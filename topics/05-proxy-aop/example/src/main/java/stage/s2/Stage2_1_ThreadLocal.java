@@ -7,7 +7,8 @@ import infra.MeasurementLog;
 import java.math.BigDecimal;
 import javax.sql.DataSource;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -24,12 +25,20 @@ import org.springframework.context.annotation.FilterType;
  *
  * <p>이것이 Spring 의 {@code TransactionSynchronizationManager} 본질.
  */
-@SpringBootApplication(scanBasePackages = "stage.s2")
+@Configuration
+@EnableAutoConfiguration
 @ComponentScan(
     basePackages = {"stage.s2", "domain"},
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,
-        classes = domain.AuditAspect.class
+        classes = {
+            domain.AuditAspect.class,
+            Stage2_1_NaiveTrap.class,
+            Stage2_2_OrderChaining.class,
+            Stage2_3_Pointcut.class,
+            Stage2_4_FiveAdvice.class,
+            Stage2_5_Audited.class
+        }
     )
 )
 public class Stage2_1_ThreadLocal {
