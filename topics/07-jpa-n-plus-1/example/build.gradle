@@ -1,0 +1,32 @@
+// 7주차 example — JPA 영속성 컨텍스트 + N+1
+// 외부 의존성: Spring Boot 3.x + spring-boot-starter-data-jpa + H2 (인메모리)
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.2.0'
+
+    // H2 인메모리 DB
+    runtimeOnly 'com.h2database:h2:2.2.224'
+}
+
+application {
+    mainClass = providers.gradleProperty('mainClass').orElse('stage.s1.Stage1_1_WriteBehind')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}
