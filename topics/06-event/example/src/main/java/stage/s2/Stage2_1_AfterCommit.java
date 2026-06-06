@@ -19,7 +19,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * <h3>Stage2_1_BeforeCommitTrap 와 비교</h3>
  * <ul>
  *   <li>변경점은 어노테이션 한 줄 — @EventListener → @TransactionalEventListener(phase = AFTER_COMMIT)</li>
- *   <li>rollback 시: 리스너 호출 안 됨 → 알림 발사 X</li>
+ *   <li>rollback 시: 리스너 호출 안 됨 → 알림 전송 X</li>
  *   <li>정상 commit 시: commit 후 호출 → 정상 알림</li>
  * </ul>
  */
@@ -92,7 +92,7 @@ public class Stage2_1_AfterCommit {
         System.out.println("  orders 행 수: " + svc.countOrders() + " (예상: 1, INSERT 는 rollback)");
 
         System.out.println();
-        System.out.println("[학습 포인트] 5 주차 양파 한계 해소");
+        System.out.println("[학습 포인트] 5 주차 advice 안-밖 순서의 한계 해소");
         System.out.println("  · rollback 시 [알림] 호출 X — 외부 부수 효과 안전");
         System.out.println("  · 변경점은 어노테이션 한 줄 (@EventListener → @TransactionalEventListener)");
         System.out.println("  · 내부 메커니즘: TransactionSynchronization 콜백 등록 (5 주차 ThreadLocal 의 실무 추상화)");

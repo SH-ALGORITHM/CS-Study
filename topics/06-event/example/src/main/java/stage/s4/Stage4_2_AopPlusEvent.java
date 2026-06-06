@@ -27,7 +27,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * <h3>한 메서드의 처리 흐름</h3>
  * <pre>
  *   @Audited (AOP, @Order 2)  ← 안쪽 (TX 안. commit 보장 필요 없음, 시도 자체 기록)
- *   @Transactional             ← 가장 바깥 양파
+ *   @Transactional             ← advice 안-밖 중 가장 바깥
  *   pay(...) {
  *     INSERT orders;
  *     publishEvent(PaymentCompletedEvent)  ← commit 후 알림 / 외부 PG / 보상
@@ -37,7 +37,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *   [AFTER_ROLLBACK] 외부 PG 보상
  * </pre>
  *
- * <h3>양파 (안 / 밖) + 시간축 (commit 전 / 후) 가 직교 (orthogonal)</h3>
+ * <h3>advice 안-밖 + 시간축 (commit 전 / 후) 가 직교 (orthogonal)</h3>
  */
 @Configuration
 @EnableAutoConfiguration
@@ -96,7 +96,7 @@ public class Stage4_2_AopPlusEvent {
     public static class PaymentListeners {
         @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
         public void onReceipt(PaymentCompletedEvent e) {
-            System.out.println("    [영수증] id=" + e.paymentId() + " — 이메일 발사");
+            System.out.println("    [영수증] id=" + e.paymentId() + " — 이메일 전송");
         }
 
         @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -125,7 +125,7 @@ public class Stage4_2_AopPlusEvent {
 
         System.out.println();
         System.out.println("[학습 포인트]");
-        System.out.println("  · AOP (양파) — 메서드 진입 / 종료 (commit 전). 시도 자체 기록");
+        System.out.println("  · AOP (advice 안-밖) — 메서드 진입 / 종료 (commit 전). 시도 자체 기록");
         System.out.println("  · Event (시간축) — commit 후 알림 / rollback 시 보상. 결과 기반");
         System.out.println("  · 두 메커니즘이 직교 — 함께 쓰면 깔끔하게 책임 분리");
         ctx.close();
