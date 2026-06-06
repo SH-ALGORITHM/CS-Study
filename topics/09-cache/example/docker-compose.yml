@@ -1,0 +1,6 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: cs-study-09-redis
+    ports:
+      - "6379:6379"
