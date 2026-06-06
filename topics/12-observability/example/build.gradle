@@ -1,0 +1,32 @@
+// 12주차 — Spring Boot Actuator + Micrometer + Prometheus
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+repositories { mavenCentral() }
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:3.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-aop:3.2.0'
+
+    // Prometheus 백엔드
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.12.2'
+
+    // (선택) Tracing — Stage 4
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave:1.2.2'
+}
+
+application {
+    mainClass = providers.gradleProperty('mainClass').orElse('app.AppServer')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}
