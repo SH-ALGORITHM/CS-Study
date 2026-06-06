@@ -517,7 +517,7 @@ logging.pattern.level=%5p [${spring.application.name:-},%X{traceId:-},%X{spanId:
 - **메트릭 보존 정책** — Prometheus 기본 15 일. 장기 보관은 Thanos / Cortex
 - **scrape interval 결정** — 5 s ~ 60 s. 짧을수록 비용. 1 분이 표준
 - **메트릭 vs 로그 비용** — 메트릭 = 시계열 (집계, 저렴) / 로그 = 텍스트 (전수, 비쌈)
-- **`@Timed` + `@Transactional` + `@PreAuthorize`** — 5 주차 양파 위에 12 주차 + 11 주차. `@Order` 로 명시
+- **`@Timed` + `@Transactional` + `@PreAuthorize`** — 5 주차 advice 안-밖 위에 12 주차 + 11 주차. `@Order` 로 명시
 - **NTP 시간 동기화** — 분산 환경에서 서버 간 시간이 1 초만 차이 나도 메트릭 왜곡 + 트레이스 정합성 손상. NTP 는 인프라 기초. 로컬 docker 는 OK, 실제 운영은 chronyd / systemd-timesyncd 필수
 
 

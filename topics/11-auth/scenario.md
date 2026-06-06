@@ -516,7 +516,7 @@ if (redis.exists("blacklist:" + token)) reject();
 - **OAuth provider 다운 시 fallback** — 10 주차 Circuit Breaker 결합
 - **Refresh 토큰 회전의 동시성** — 클라이언트 2 개가 동시 갱신 시도 → 한쪽 실패. 클라이언트 단 lock
 - **세션 고정 (Session Fixation) 공격** — 로그인 시 세션 ID 재발급 필수
-- **`@PreAuthorize` + 5 주차 `@Order` 양파** — 트랜잭션 / 캐시 / 권한 순서
+- **`@PreAuthorize` + 5 주차 `@Order` advice 안-밖** — 트랜잭션 / 캐시 / 권한 순서
 - **OAuth Authorization Code Flow vs Implicit Flow** — Implicit 는 권장 X (보안 약함). Code + PKCE 가 표준
 - **CSRF 토큰** — 세션 인증에 필수. JWT (헤더 전송) 는 자연 회피
 - **6 주차 Event + 로그인 감사** — `AuthenticationSuccessEvent` / `AuthenticationFailureBadCredentialsEvent`

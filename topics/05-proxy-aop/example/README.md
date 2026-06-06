@@ -43,7 +43,7 @@ example/
 │   │       ├── s2/                             # STAGE 2: @Transactional 분해 + @Aspect 자작
 │   │       │   ├── Stage2_1_NaiveTrap.java     # 순진한 버전 함정 재현
 │   │       │   ├── Stage2_1_ThreadLocal.java   # ThreadLocal 해결
-│   │       │   ├── Stage2_2_OrderChaining.java # @Order 양파 껍질
+│   │       │   ├── Stage2_2_OrderChaining.java # @Order advice 안-밖
 │   │       │   ├── Stage2_3_Pointcut.java      # Pointcut 3 가지
 │   │       │   ├── Stage2_4_FiveAdvice.java    # Advice 5 종 호출 순서 (≥5.2.7)
 │   │       │   └── Stage2_5_Audited.java       # @Audited 도메인 적용
@@ -84,7 +84,7 @@ cd topics/05-proxy-aop/example
 
 1. **STAGE 1** — Spring AOP 가 자동으로 해주는 일을 손으로 짜본다 (JDK Proxy + CGLIB)
 2. **STAGE 2-1** ★ — `@MyTransactional` 의 순진한 버전이 트랜잭션을 어떻게 깨뜨리는지 직접 재현 → ThreadLocal 로 해결
-3. **STAGE 2-2 ~ 5** — `@Order` 양파 껍질 + Pointcut 3 종 + Advice 5 종 (Spring ≥5.2.7 순서 검증) + `@Audited` 자작
+3. **STAGE 2-2 ~ 5** — `@Order` advice 안-밖 + Pointcut 3 종 + Advice 5 종 (Spring ≥5.2.7 순서 검증) + `@Audited` 자작
 4. **STAGE 3** — 측정 (오버헤드 / JDK vs CGLIB / `getClass()` / BeanPostProcessor)
 5. **STAGE 4** — self-invocation 함정 + final / private / static 한계
 

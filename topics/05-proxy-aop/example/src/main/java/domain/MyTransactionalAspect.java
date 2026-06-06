@@ -16,7 +16,7 @@ import java.sql.SQLException;
  *
  * <p>{@link #currentConnection(DataSource)} 가 Spring 의 {@code DataSourceUtils.getConnection()} 에 해당.
  *
- * <p>{@code @Order(1)} = AOP 체이닝 시 가장 바깥. STAGE 2-2 양파 껍질 참고.
+ * <p>{@code @Order(1)} = AOP 체이닝 시 가장 바깥. STAGE 2-2 advice 안-밖 순서 참고.
  */
 @Aspect
 @Order(1)

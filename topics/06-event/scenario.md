@@ -1,10 +1,10 @@
 # 6주차 — 명시적으로 이벤트를 발행해서 commit 후 처리까지 (Spring Event)
 
-이번 주제: 5 주차에 `@Audited` 같은 AOP 가 메서드 호출을 가로채서 공통 관심사를 끼워넣었다. 그런데 **`@Order(1) @Transactional` + `@Order(2) @Audited` 양파에서 감사 로그는 commit 직전 (안쪽) 에 실행됨** — 만약 감사 코드가 "외부 알림 / 결제 PG / 이메일" 처럼 **롤백되면 안 되는 외부 부수 효과** 라면, 트랜잭션이 롤백돼도 이미 발사되어버린다. 6 주차는 이걸 "암묵적 가로채기 (AOP)" 대신 **"명시적 이벤트 발행 + commit 후 리스너"** 로 푸는 메커니즘을 다룬다. `ApplicationEventPublisher`, `@EventListener`, `@TransactionalEventListener(phase = AFTER_COMMIT)`, `@Async` 까지.
+이번 주제: 5 주차에 `@Audited` 같은 AOP 가 메서드 호출을 가로채서 공통 관심사를 끼워넣었다. 그런데 **`@Order(1) @Transactional` + `@Order(2) @Audited` advice 안-밖 구조에서 감사 로그는 commit 직전 (안쪽) 에 실행됨** — 만약 감사 코드가 "외부 알림 / 결제 PG / 이메일" 처럼 **롤백되면 안 되는 외부 부수 효과** 라면, 트랜잭션이 롤백돼도 이미 전송되어버린다. 6 주차는 이걸 "암묵적 가로채기 (AOP)" 대신 **"명시적 이벤트 발행 + commit 후 리스너"** 로 푸는 메커니즘을 다룬다. `ApplicationEventPublisher`, `@EventListener`, `@TransactionalEventListener(phase = AFTER_COMMIT)`, `@Async` 까지.
 
 5 가지 학습 축:
 - `ApplicationEventPublisher` + `@EventListener` — 명시적 발행 / 구독. 가장 작은 단위부터 손으로
-- `@TransactionalEventListener` 의 4 phase — `BEFORE_COMMIT` / `AFTER_COMMIT` / `AFTER_ROLLBACK` / `AFTER_COMPLETION`. 5 주차 양파 한계의 정답
+- `@TransactionalEventListener` 의 4 phase — `BEFORE_COMMIT` / `AFTER_COMMIT` / `AFTER_ROLLBACK` / `AFTER_COMPLETION`. 5 주차 advice 안-밖 순서의 한계에 대한 정답
 - `@Async` + `ThreadPoolTaskExecutor` — 동기 한계 (리스너 느리면 publisher 도 느림) → 별 스레드. Boot 자동 executor 의 "max=무제한" 함정 + Java 21 Virtual Thread 까지
 - self-invocation 함정 (5 주차 회수) — `@Async` 도 같은 프록시 메커니즘. `@Async + AFTER_COMMIT` 의 새 스레드 함정 (ThreadLocal / 영속성 컨텍스트 날아감 → `REQUIRES_NEW`)
 - AOP vs Event — 암묵적 가로채기 vs 명시적 발행. 어느 쪽을 언제 쓰는가
@@ -41,8 +41,8 @@ STEP 0. 개념 숙지 (도메인 무관, 모두 동일)
 ## 필수 개념 (AI 와 대화하며 숙지)
 
 ### 5 주차 한계 → 6 주차 동기
-1. **5 주차 양파 (@Order(1) TX + @Order(2) Audit) 의 한계** — Audit 가 commit 직전 (TX 안쪽) 실행. 만약 audit 이 외부 알림 / 결제 PG / 이메일이면 **트랜잭션 롤백돼도 이미 발사됨**. 학습자 본인이 5 주차에 직접 본 그 흐름
-2. **"안쪽 advice 를 바깥쪽으로 빼면 되지 않나?"** — 안 됨. 양파 구조에서 안쪽이 TX 안. 바깥으로 빼려면 TX advice 자체가 안쪽이어야 하는데 그러면 commit 보장이 안 됨. 구조적 한계
+1. **5 주차 advice 안-밖 (@Order(1) TX + @Order(2) Audit) 의 한계** — Audit 가 commit 직전 (TX 안쪽) 실행. 만약 audit 이 외부 알림 / 결제 PG / 이메일이면 **트랜잭션 롤백돼도 이미 전송됨**. 학습자 본인이 5 주차에 직접 본 그 흐름
+2. **"안쪽 advice 를 바깥쪽으로 빼면 되지 않나?"** — 안 됨. advice 안-밖 구조에서 안쪽이 TX 안. 바깥으로 빼려면 TX advice 자체가 안쪽이어야 하는데 그러면 commit 보장이 안 됨. 구조적 한계
 3. **해법** — 메서드 안에서 `publisher.publishEvent(new XxxEvent())` 한 줄 → 리스너가 **commit 후 (AFTER_COMMIT)** 에 실행. 트랜잭션이 롤백되면 리스너 호출도 자동 취소
 
 ### Event 패턴 본질
@@ -56,7 +56,7 @@ STEP 0. 개념 숙지 (도메인 무관, 모두 동일)
 9. **`@EventListener` 가 어떻게 listener 로 등록되나** — `EventListenerMethodProcessor` (4 주차 `internal*` 5 개 중 하나) 가 Bean 초기화 시점에 `@EventListener` 메서드를 찾아서 `ApplicationListenerMethodAdapter` 로 감싸 등록
 
 ### `@TransactionalEventListener` 4 phase
-10. **4 phase 가 푸는 문제** — 단순 `@EventListener` 는 **트랜잭션 무관** → publisher 가 commit 하기 전에 리스너가 실행됨. 외부 알림이 트랜잭션 롤백 후에도 발사된 상태로 남음. `@TransactionalEventListener` 는 현재 트랜잭션에 콜백을 등록 → phase 시점에만 실행
+10. **4 phase 가 푸는 문제** — 단순 `@EventListener` 는 **트랜잭션 무관** → publisher 가 commit 하기 전에 리스너가 실행됨. 외부 알림이 트랜잭션 롤백 후에도 전송된 상태로 남음. `@TransactionalEventListener` 는 현재 트랜잭션에 콜백을 등록 → phase 시점에만 실행
 11. **각 phase 언제 쓰나** —
     - `BEFORE_COMMIT` — commit 직전. 마지막 검증 / 같은 트랜잭션 안에서 추가 쓰기
     - `AFTER_COMMIT` (기본) — commit 직후. 알림 / 외부 API / 이메일 (롤백 가능성 없음)
@@ -72,12 +72,12 @@ STEP 0. 개념 숙지 (도메인 무관, 모두 동일)
 
 ### AOP vs Event
 17. **결정 매트릭스** — 같은 도메인 / 같은 클래스의 횡단 관심사 (로깅 / 측정) = AOP. 다른 도메인 / 다른 모듈로 부수 효과 전파 (알림 / 통계 / 외부 API) = Event. 둘 다 가능한 회색지대 (감사 로그) 는 commit 보장 필요 여부로 결정
-18. **Event 가 AOP 의 양파 한계를 푸는 방식** — AOP 는 advice 순서가 양파 (안 / 밖 구조). Event 는 phase 가 시간축 (commit 전 / 후 구조). 양파 안에 갇혀있던 advice 를 시간축 밖으로 빼냄
+18. **Event 가 AOP 의 advice 순서 한계를 푸는 방식** — AOP 는 advice 순서가 안 / 밖 구조. Event 는 phase 가 시간축 (commit 전 / 후 구조). advice 안에 갇혀있던 호출을 시간축 밖으로 빼냄
 
 ## 자기 검증 (입으로 답할 수 있어야 STAGE 1 시작)
 
 **★ 관문 — 이 3 개는 입으로 답해야 STAGE 1 진입**
-- [ ] ★ 5 주차 @Order 양파 (TX 바깥 + Audit 안쪽) 의 한계 — 1 분 본인 말로. 그리고 6 주차가 어떻게 푸는지 1 줄
+- [ ] ★ 5 주차 @Order advice 안-밖 (TX 바깥 + Audit 안쪽) 의 한계 — 1 분 본인 말로. 그리고 6 주차가 어떻게 푸는지 1 줄
 - [ ] ★ `@TransactionalEventListener` 4 phase 각각 언제 쓰나
 - [ ] ★ `@Async` self-invocation 이 안 먹는 이유 — `@Transactional` 함정과 같은가 다른가
 
@@ -119,7 +119,7 @@ STEP 1. 본인 도메인 선택 — 6 주차에 맞게 (부수 효과 자연 + c
 | 1 | **주문 완료** (`order`) | ★★★ | ★★★ | ★★★ | 결제 / 재고 / 알림 / 통계 / 슬랙. **가장 정석**. Spring 공식 가이드 표준 |
 | 2 | **결제 완료** (`payment`) | ★★★ | ★★★ | ★★★ | 영수증 / 포인트적립 / 감사 / 외부 PG 콜백. `@TransactionalEventListener` 의 정석 |
 | 3 | **회원가입** (`signup`) | ★★★ | ★★ | ★★★ | 환영메일 / 쿠폰지급 / 통계 / CRM 동기화 |
-| 4 | **송금 완료** (`transfer`) | ★★★ | ★★★ | ★★★ | **5 주차 chanhyeok 연장**. 5 주차 @Audited 가 commit 전 발사 → 6 주차 AFTER_COMMIT 로 옮김 |
+| 4 | **송금 완료** (`transfer`) | ★★★ | ★★★ | ★★★ | **5 주차 chanhyeok 연장**. 5 주차 @Audited 가 commit 전 실행 → 6 주차 AFTER_COMMIT 로 옮김 |
 | 5 | **파일 업로드** (`file_upload`) | ★★★ | ★★ | ★★ | 썸네일 생성 / 검색 인덱싱 / 알림. `@Async` 가 강하게 필요 |
 | 6 | **게시글 작성** (`post`) | ★★ | ★★ | ★★ | 알림 / 검색 인덱싱 / 통계. 입문자용 |
 | 7 | **댓글 작성** (`comment`) | ★★★ | ★★ | ★★ | 글쓴이 알림 / mention 알림 / 통계 |
@@ -153,7 +153,7 @@ STEP 1. 본인 도메인 선택 — 6 주차에 맞게 (부수 효과 자연 + c
 | 본인 상황 | 추천 도메인 |
 |---|---|
 | Event 처음 / 입문자 | **9 좋아요** 또는 **6 게시글** — 부수 효과 2 ~ 3 개로 작게 시작 |
-| 5 주차 양파 한계 직접 해소 | **4 송금** (5 주차 chanhyeok 연장) — @Audited → AFTER_COMMIT 으로 옮김 |
+| 5 주차 advice 안-밖 순서의 한계 직접 해소 | **4 송금** (5 주차 chanhyeok 연장) — @Audited → AFTER_COMMIT 으로 옮김 |
 | 면접 가치 최대화 | **1 주문** / **2 결제** / **10 재고** / **12 회원탈퇴** |
 | 4 phase 다 다뤄보기 | **12 회원탈퇴** — BEFORE_COMMIT / AFTER_COMMIT / AFTER_ROLLBACK / AFTER_COMPLETION 다 등장 |
 | `@Async` + 스레드풀 중점 | **5 파일 업로드** — 썸네일 생성이 무거움 → 비동기 필수 |
@@ -246,7 +246,7 @@ public class Stage1HelloEvent {
 - [06-XX 14:00] s1 · HelloEvent 발행 → 동기 리스너 호출 순서 println 확인
 - [06-XX 14:30] s1 · 리스너 2 개 + @Order — order=1 이 먼저
 - [06-XX 14:45] s1 · 한 리스너에서 예외 던지면 다음 리스너 호출 안 됨 확인
-- [06-XX 22:00] s2 · @EventListener 만 → commit 전 발사 시연 (롤백 후 이벤트 이미 처리됨)
+- [06-XX 22:00] s2 · @EventListener 만 → commit 전 실행 시연 (롤백 후 이벤트 이미 처리됨)
 - [06-XX 22:30] s2 · @TransactionalEventListener(AFTER_COMMIT) — 롤백 시 리스너 호출 X 확인
 - [06-XX 22:45] s2 · BEFORE_COMMIT / AFTER_ROLLBACK / AFTER_COMPLETION 각 phase 출력 매트릭스
 - [06-XX 23:00] s2 · 트랜잭션 밖 publishEvent → 무시. fallbackExecution=true 시 즉시 실행 확인
@@ -375,7 +375,7 @@ public class Listener3 {
 **관찰 포인트**:
 - `@Order` 숫자 작은 게 먼저 (5 주차 `@Order` 와 같은 규칙)
 - `@Order` 없으면 Spring 이 임의 순서 결정 — 불확정
-- AOP 의 `@Order` 는 양파 껍질 안 / 밖 구조였는데, Event 의 `@Order` 는 단순 호출 순서
+- AOP 의 `@Order` 는 advice 안 / 밖 구조였는데, Event 의 `@Order` 는 단순 호출 순서
 
 ##### 1-3. 한 리스너에서 예외 던지면 다음 리스너는?
 
@@ -459,7 +459,7 @@ payload-only (String 직접 발행) 동작: 정상 매칭 + PayloadApplicationEv
 
 #### ▸ STAGE 2 — `@TransactionalEventListener` 4 phase (필수, **6 주차 가장 중요**)
 
-##### 2-1. 5 주차 양파 한계 재현 — `@EventListener` 만 쓰면 commit 전 발사 (★ 핵심 학습 단계)
+##### 2-1. 5 주차 advice 안-밖 순서의 한계 재현 — `@EventListener` 만 쓰면 commit 전 실행 (★ 핵심 학습 단계)
 
 **🔴 5 주차 학습자가 직접 본 그 흐름의 정답을 만드는 자리.** 한 번에 정답 짜지 말고 순진한 버전 (그냥 `@EventListener`) → 함정 발견 → `@TransactionalEventListener` 순서로.
 
@@ -493,7 +493,7 @@ public class NotificationListener {
     @EventListener
     public void on(OrderPlacedEvent e) {
         System.out.println("[알림] 주문 발생 — " + e.orderId() + " / " + e.amount());
-        // 실제로는 이메일 / 슬랙 / SMS — 한 번 발사하면 회수 불가
+        // 실제로는 이메일 / 슬랙 / SMS — 한 번 전송하면 회수 불가
     }
 }
 ```
@@ -504,17 +504,17 @@ public class NotificationListener {
 
 | 기대 | 실제 |
 |---|---|
-| 트랜잭션 롤백 → INSERT 취소 → 알림도 안 발사 | INSERT 는 롤백됨 ✓ / **하지만 알림 이미 발사됨** ✗ |
+| 트랜잭션 롤백 → INSERT 취소 → 알림도 안 전송 | INSERT 는 롤백됨 ✓ / **하지만 알림 이미 전송됨** ✗ |
 
 **출력**:
 ```
 INSERT INTO orders ...
-[알림] 주문 발생 — 1 / -100     ← 알림 이미 발사
+[알림] 주문 발생 — 1 / -100     ← 알림 이미 전송
 IllegalArgumentException: 음수 금액
 (rollback)
 ```
 
-→ 사용자에게는 "주문 실패" 알림이 가버림. 5 주차 양파 한계의 정확한 재현.
+→ 사용자에게는 "주문 실패" 알림이 가버림. 5 주차 advice 안-밖 순서의 한계의 정확한 재현.
 
 **Step 3 — `@TransactionalEventListener(AFTER_COMMIT)` 로 해결**
 
@@ -546,12 +546,12 @@ INSERT INTO orders ...
 ```
 
 **관찰 포인트**:
-- 5 주차 `@Order` 양파에서는 "Audit 가 TX 안쪽" 이라 commit 전 발사 — 구조적 한계
+- 5 주차 `@Order` advice 안-밖에서는 "Audit 가 TX 안쪽" 이라 commit 전 실행 — 구조적 한계
 - 6 주차는 시간축 (`AFTER_COMMIT`) 로 분리 → 트랜잭션 결과에 따라 자동 취소
 - `@EventListener` → `@TransactionalEventListener` 어노테이션 한 줄 변경뿐. 학습 비용 최소
 - Spring 내부 — `@TransactionalEventListener` 는 `TransactionSynchronization` 콜백을 등록 (`TransactionSynchronizationManager.registerSynchronization`). 5 주차 STAGE 2-1 의 ThreadLocal `TX_CONN` 과 같은 메커니즘
 
-> 핵심: 5 주차 양파 한계를 정확히 푸는 게 6 주차의 본질. `@TransactionalEventListener` 가 없는 세상에서는 "commit 후 처리" 를 위해 메서드 끝에 `try/commit + finally/notify` 같은 직접 코드를 짜야 했음 (`AfterReturning` advice 로 약간 가능했지만 같은 트랜잭션 안). 6 주차 이후는 시간축 phase 로 분리.
+> 핵심: 5 주차 advice 안-밖 순서의 한계를 정확히 푸는 게 6 주차의 본질. `@TransactionalEventListener` 가 없는 세상에서는 "commit 후 처리" 를 위해 메서드 끝에 `try/commit + finally/notify` 같은 직접 코드를 짜야 했음 (`AfterReturning` advice 로 약간 가능했지만 같은 트랜잭션 안). 6 주차 이후는 시간축 phase 로 분리.
 
 ##### 2-2. 4 phase 각각 직접 출력
 
@@ -690,7 +690,7 @@ public void onBefore(OrderPlacedEvent e) {
 | 케이스 | publisher 의 `@EventListener` | `@TransactionalEventListener(AFTER_COMMIT)` |
 |---|---|---|
 | 정상 commit | 리스너 실행됨 (commit 전) | 리스너 실행됨 (commit 후) |
-| 예외 → rollback | **리스너 실행됨** (이미 발사됨) ✗ | 리스너 실행 안 됨 ✓ |
+| 예외 → rollback | **리스너 실행됨** (이미 실행됨) ✗ | 리스너 실행 안 됨 ✓ |
 | 트랜잭션 밖 호출 | 즉시 실행 | **조용히 무시** (fallback=false 기본) |
 | 트랜잭션 밖 + fallback=true | 즉시 실행 | 즉시 실행 |
 
@@ -995,7 +995,7 @@ public class AuditListener {
 | publisher 가 리스너 / advice 를 알아야 하나 | 모름 (분리) | 모름 (분리) |
 | 코드 가시성 | 메서드 보기엔 안 보임 (Aspect 분리) | publisher 코드에 한 줄 명시됨 |
 | 적용 범위 | 한 클래스 / 같은 패키지 횡단 관심사 | 모듈 간 / 도메인 간 부수 효과 전파 |
-| 트랜잭션 시점 제어 | 양파 구조 — 안 / 밖 만 | 시간축 4 phase — 자유 |
+| 트랜잭션 시점 제어 | advice 안-밖 구조 — 안 / 밖 만 | 시간축 4 phase — 자유 |
 | 비동기 | `@Async` 가능 (같은 함정) | `@Async` 가능 (같은 함정) |
 | **언제 AOP** | 로깅 / 측정 / 권한 / 캐싱 / 트랜잭션 — 모든 메서드에 일관 끼움 | |
 | **언제 Event** | | 알림 / 외부 API / 통계 / 다른 모듈 호출 — 다른 책임으로 분기 |
@@ -1038,9 +1038,9 @@ public class PaymentEventListeners {
 ```
 
 **관찰 포인트**:
-- AOP (분산락 / 트랜잭션 / 감사) 는 메서드 진입 / 종료 (양파)
+- AOP (분산락 / 트랜잭션 / 감사) 는 메서드 진입 / 종료 (advice 안-밖)
 - Event (영수증 / 포인트 / 보상) 는 commit 결과 (시간축)
-- 같이 쓰면 깔끔 — 양파 + 시간축이 직교 (orthogonal)
+- 같이 쓰면 깔끔 — advice 안-밖 + 시간축이 직교 (orthogonal)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1096,14 +1096,14 @@ orderRepo.save(order);
 
 | 5 주차에서 본 것 | 6 주차에서 확장 |
 |---|---|
-| `@Order(1) TX + @Order(2) Audit` 양파에서 Audit 가 commit 전 발사 | `@TransactionalEventListener(AFTER_COMMIT)` 로 시간축 분리 |
+| `@Order(1) TX + @Order(2) Audit` advice 안-밖에서 Audit 가 commit 전 실행 | `@TransactionalEventListener(AFTER_COMMIT)` 로 시간축 분리 |
 | `@Transactional` self-invocation 함정 (this = 원본) | `@Async` 도 같은 함정. 해결책으로 publishEvent 자체가 자연스러운 우회 |
 | `TransactionSynchronizationManager` (ThreadLocal) — Aspect 시작 conn 을 Repository 가 공유 | `@TransactionalEventListener` 가 같은 객체 (`TransactionSynchronization`) 에 콜백 등록 — 메커니즘 동일 |
 | AOP = 메서드 호출 시 자동 advice (암묵적) | Event = 메서드 안 `publishEvent` 한 줄 (명시적) |
 | Pointcut 표현식 + `@annotation` 으로 매칭 | 이벤트 타입으로 매칭. `@EventListener(condition = "...")` SpEL 도 가능 |
 
 ### 6 주차 참고 질문 (답하고 싶은 만큼만)
-- 5 주차 양파 한계가 6 주차에 어떻게 풀리는가
+- 5 주차 advice 안-밖 순서의 한계가 6 주차에 어떻게 풀리는가
 - `publisher.publishEvent(event)` 한 줄이 컨테이너 내부에서 일어나는 일 3 단계
 - `@TransactionalEventListener` 4 phase 각각 언제 쓰는가 + 본인 도메인 예 1 개씩
 - 트랜잭션 밖 `publishEvent` + `@TransactionalEventListener` 기본 동작 + `fallbackExecution=true` 효과

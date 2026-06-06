@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
- * STAGE 4 — 본인 도메인에서 양파 껍질 (@Order 체이닝).
+ * STAGE 4 — 본인 도메인에서 advice 안-밖 (@Order 체이닝).
  *
  * <h3>적용된 advice</h3>
  * <ul>
@@ -27,7 +27,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * </pre>
  *
  * <h3>주의</h3>
- * AUDIT 가 LOCK 안쪽 → commit 전에 감사 기록 발사. 만약 audit 이 외부 알림 / 다른 시스템 호출이면
+ * AUDIT 가 LOCK 안쪽 → commit 전에 감사 기록 실행. 만약 audit 이 외부 알림 / 다른 시스템 호출이면
  * commit 후로 옮겨야 (6 주차 @TransactionalEventListener(AFTER_COMMIT)).
  */
 @SpringBootApplication(scanBasePackages = {"domain", "infra"})
@@ -42,7 +42,7 @@ public class Stage4AspectChaining {
         TransferService svc = ctx.getBean(TransferService.class);
 
         System.out.println();
-        System.out.println("=== STAGE 4 — @Order 양파 껍질 (@DistributedLock + @Audited) ===");
+        System.out.println("=== STAGE 4 — @Order advice 안-밖 (@DistributedLock + @Audited) ===");
         System.out.println();
 
         System.out.println("--- transfer(1 → 2, 100) 정상 송금 ---");

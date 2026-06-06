@@ -235,7 +235,7 @@ proxy.next();                                // 자동 로그 + 결과
 - [05-XX 22:15] s2 · @MyTransactional 순진한 버전 함정 재현 — 예외 후 from 차감 그대로 남음
 - [05-XX 22:30] s2 · ThreadLocal 적용 후 from 차감 같이 롤백 확인
 - [05-XX 22:45] s2 · Advice 5 종 출력 — Around 종료가 After 앞인가 뒤인가 (≥5.2.7 → 뒤가 정답)
-- [05-XX 23:00] s2 · @Order 양파 껍질 — TX 가 가장 바깥인지 출력으로 확인
+- [05-XX 23:00] s2 · @Order advice 안-밖 — TX 가 가장 바깥인지 출력으로 확인
 - [05-XX 23:15] s2 · 본인 도메인에 @Audited / @Timed 끼움 — 호출 전후 자동 로그
 - [05-XX 23:00] s3 · AOP 적용 전 / 후 응답 시간 — 순수 Xms / AOP Yms / 오버헤드 N%
 - [05-XX 23:30] s3 · JDK vs CGLIB 1M 회 호출 시간 비교
@@ -289,7 +289,7 @@ STAGE 진행 가이드
 |---|---|---|
 | STAGE 1 (JDK Proxy + CGLIB 손 작성 + getBean 프록시 확인) | 2 ~ 3 시간 | **화요일까지 (필수)** |
 | **STAGE 2-1 (`@Transactional` 분해 — 순진 → 함정 → ThreadLocal)** ★ | **2 ~ 3 시간** | **목요일까지 (필수)**. 5 주차 가장 중요한 학습 |
-| STAGE 2-2 (AOP 체이닝 + `@Order` 양파 껍질) | 1 시간 | advice 호출 순서 직접 확인 |
+| STAGE 2-2 (AOP 체이닝 + `@Order` advice 안-밖) | 1 시간 | advice 호출 순서 직접 확인 |
 | STAGE 2-3 ~ 2-5 (Pointcut + Advice 5 종 + 본인 도메인) | 3 ~ 4 시간 | 본인 도메인 어노테이션 자작 |
 | STAGE 3 (AOP 오버헤드 / JDK vs CGLIB / BeanPostProcessor 측정) | 2 ~ 3 시간 | 5 케이스 측정 + 해석 |
 | STAGE 4 (self-invocation + final / private 한계) | 2 ~ 3 시간 | 면접 직결 |
@@ -591,7 +591,7 @@ public class TransferRepository {
 >
 > 실무 `@Transactional` 은 여기에 `PlatformTransactionManager` 추상화 + propagation (REQUIRED / REQUIRES_NEW / NESTED) + isolation 까지 다루지만, 본질은 위 ThreadLocal + Around advice.
 
-##### 2-2. AOP 체이닝 + `@Order` — 양파 껍질 관찰
+##### 2-2. AOP 체이닝 + `@Order` — advice 안-밖 관찰
 
 `@MyTransactional` + `@Audited` + `@Timed` 를 한 메서드에 모두 붙이면 advice 호출 순서가 어떻게 되는가:
 
@@ -609,7 +609,7 @@ public class OrderService {
 - `@Order` 없으면 advice 적용 순서가 불확정 — 로깅이 트랜잭션 안에 들어갈 수도, 밖에 있을 수도 있음
 - 트랜잭션 advice 가 바깥이어야 안전 — 안에 있으면 트랜잭션 commit 전에 로그 / 감사 기록이 먼저 들어가 불일치 발생 가능
 
-**`@Order` 로 양파 껍질 순서 명시**:
+**`@Order` 로 advice 안-밖 순서 명시**:
 
 ```java
 @Aspect @Component @Order(1)   // ← 가장 바깥
@@ -735,7 +735,7 @@ public class AllAdviceDemo {
 > - **"on the way in"** (들어갈 때) — 우선순위 높은 게 먼저 → `Around` 시작 → `Before`
 > - **"on the way out"** (나갈 때) — 우선순위 높은 게 **가장 늦게** → `AfterReturning` → `After` → `Around` 종료
 >
-> → `@Around` 가 항상 양파의 가장 바깥. `proceed()` 호출 직후가 아니라 `AfterReturning` / `After` 가 모두 끝난 뒤 `Around` 종료 코드가 실행된다.
+> → `@Around` 가 항상 advice 호출 순서의 가장 바깥. `proceed()` 호출 직후가 아니라 `AfterReturning` / `After` 가 모두 끝난 뒤 `Around` 종료 코드가 실행된다.
 >
 > 스터디원에게 "출력 찍어서 위 순서와 비교" 를 과제로. `measurements.md` 에 `[Around 종료]` 가 `[After]` 앞인지 뒤인지 한 줄 기록.
 
@@ -1115,13 +1115,13 @@ public class OrderEventListener {
 - **"AOP 가 작동하는 시점"** (`BeanPostProcessor.postProcessAfterInitialization`)
 - **"`@Transactional` 분해해서 설명"** — `TransactionInterceptor` + `Around` advice + begin / commit / rollback
 - **"Service 와 Repository 가 같은 트랜잭션을 공유하는 메커니즘"** — `TransactionSynchronizationManager` (ThreadLocal 기반). 본인이 직접 `TX_CONN.set/get` 짜본 경험 + 누수 방지 `remove()`
-- **"여러 Aspect 가 같이 붙으면 트랜잭션이 안인가 밖인가"** — `@Order` 로 양파 껍질 순서 명시. 트랜잭션이 가장 바깥. commit 후 처리는 `@TransactionalEventListener(AFTER_COMMIT)`
+- **"여러 Aspect 가 같이 붙으면 트랜잭션이 안인가 밖인가"** — `@Order` 로 advice 안-밖 순서 명시. 트랜잭션이 가장 바깥. commit 후 처리는 `@TransactionalEventListener(AFTER_COMMIT)`
 - **"self-invocation 해결 방법 3 가지"** + 어느 것이 권장
 - **"4 주차 IoC 컨테이너 + 5 주차 AOP 의 관계"** — 컨테이너가 객체 생성 책임 / AOP 가 메서드 호출 책임. BeanPostProcessor 가 다리
 
 ### 실무 확장 화두 (스터디 토론 / 면접 후속 질문)
 - **`TransactionSynchronizationManager` 의 본질**: ThreadLocal 로 Connection / 트랜잭션 컨텍스트를 보관 — Aspect 에서 시작한 트랜잭션을 Repository 가 어떻게 같은 conn 으로 받는가. STAGE 2-1 Step 3 에서 직접 만든 `TX_CONN.set/get` 의 실무 추상화. 3 주차 `setAutoCommit(false)` 를 직접 다뤘던 경험이 여기서 정리됨
-- **`@Order` 와 양파 껍질 순서**: 트랜잭션 advice 가 가장 바깥이어야 안전. 안쪽에 두면 commit 전에 감사 / 로그 / 알림이 먼저 발사되어 trans-data 불일치 가능. STAGE 2-2 에서 직접 관찰
+- **`@Order` 와 advice 안-밖 순서**: 트랜잭션 advice 가 가장 바깥이어야 안전. 안쪽에 두면 commit 전에 감사 / 로그 / 알림이 먼저 실행되어 trans-data 불일치 가능. STAGE 2-2 에서 직접 관찰
 - **AOP 적용 순서 (`@Order`)**: 여러 Aspect 가 같은 메서드에 매칭될 때 호출 순서 결정
 - **`@Transactional` propagation / isolation**: REQUIRED / REQUIRES_NEW / NESTED 차이. 자작 `@MyTransactional` 에 직접 구현해보면 트랜잭션 컨텍스트 관리 (ThreadLocal) 의 어려움 체감
 - **Spring AOP vs AspectJ**: Spring 은 런타임 위빙 (프록시), AspectJ 는 컴파일 / 로드 타임 위빙 (바이트코드 직접 수정). 적용 범위 / 성능 차이

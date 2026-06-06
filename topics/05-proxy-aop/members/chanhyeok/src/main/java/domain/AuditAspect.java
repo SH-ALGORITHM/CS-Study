@@ -8,7 +8,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * 감사 로그 Aspect — Stage4 양파 껍질에서 @DistributedLock(@Order 1) 안쪽.
+ * 감사 로그 Aspect — Stage4 advice 안-밖에서 @DistributedLock(@Order 1) 안쪽.
  *
  * <p>락 잡은 후 → 감사 기록 → 실제 메서드 → 종료 기록 → 락 해제.
  */

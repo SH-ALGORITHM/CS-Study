@@ -12,8 +12,8 @@ scenario.md 의 12 개 도메인과 **별개로** 만든 참고 코드입니다.
 | 풀려고 하는 문제 | 메서드 호출 가로채기 (공통 관심사) | 한 사건이 여러 모듈로 퍼지기 (commit 후 보장) |
 | 도구 | `@Aspect` / `@Around` / `Pointcut` | `ApplicationEventPublisher` / `@EventListener` / `@TransactionalEventListener` / `@Async` |
 | 트리거 방식 | 암묵적 (어노테이션) | 명시적 (`publishEvent` 한 줄) |
-| 시점 제어 | 양파 — 안 / 밖만 | 시간축 — 4 phase 자유 |
-| 5 주차 양파 한계 | Audit 가 TX 안쪽 → commit 전 발사 | AFTER_COMMIT 으로 commit 후만 |
+| 시점 제어 | advice 안-밖 만 | 시간축 — 4 phase 자유 |
+| 5 주차 advice 안-밖 순서의 한계 | Audit 가 TX 안쪽 → commit 전 실행 | AFTER_COMMIT 으로 commit 후만 |
 | self-invocation 함정 | `@Transactional` / `@Async` 동일 | `publishEvent` 가 자연스러운 우회 |
 | 면접 직결 | `@Transactional` 안 먹는 3 가지 | 4 phase 차이 / `@Async` 함정 / AOP vs Event |
 
@@ -41,7 +41,7 @@ example/
 │   │       │   ├── Stage1_4_OldStyleListener.java  # ApplicationListener 인터페이스 vs @EventListener
 │   │       │   └── Stage1_5_PayloadOnly.java       # Spring 4.2+ payload-only
 │   │       ├── s2/                             # STAGE 2: @TransactionalEventListener 4 phase
-│   │       │   ├── Stage2_1_BeforeCommitTrap.java  # 그냥 @EventListener → commit 전 발사 (함정)
+│   │       │   ├── Stage2_1_BeforeCommitTrap.java  # 그냥 @EventListener → commit 전 실행 (함정)
 │   │       │   ├── Stage2_1_AfterCommit.java       # AFTER_COMMIT 해결
 │   │       │   ├── Stage2_2_AllPhases.java         # 4 phase 한꺼번에
 │   │       │   ├── Stage2_3_FallbackExecution.java # 트랜잭션 밖 + fallbackExecution
@@ -71,7 +71,7 @@ cd topics/06-event/example
 # STAGE 1-2 — 리스너 3 개 + @Order
 ./gradlew run -PmainClass=stage.s1.Stage1_2_MultipleListeners
 
-# STAGE 2-1 — @EventListener 만 → commit 전 발사 (함정 재현)
+# STAGE 2-1 — @EventListener 만 → commit 전 실행 (함정 재현)
 ./gradlew run -PmainClass=stage.s2.Stage2_1_BeforeCommitTrap
 
 # STAGE 2-1 — @TransactionalEventListener(AFTER_COMMIT) 해결
@@ -92,8 +92,8 @@ cd topics/06-event/example
 ## 핵심 학습 흐름
 
 1. **STAGE 1** — publishEvent + @EventListener 가장 작은 단위 손맛 (리스너 호출 순서 / @Order / 예외 전파)
-2. **STAGE 2** ★ — `@EventListener` 만 쓰면 commit 전 발사 → `@TransactionalEventListener(AFTER_COMMIT)` 로 해결. **6 주차 가장 중요한 학습**
+2. **STAGE 2** ★ — `@EventListener` 만 쓰면 commit 전 실행 → `@TransactionalEventListener(AFTER_COMMIT)` 로 해결. **6 주차 가장 중요한 학습**
 3. **STAGE 3** — 동기 한계 → `@Async` + ThreadPoolTaskExecutor. self-invocation 함정 (5 주차 회수) → publishEvent 가 자연스러운 우회
 4. **STAGE 4** — 5 주차 자작 `@Audited` (AOP) 를 6 주차 이벤트로 옮기는 자리. AOP + Event 동시 사용 패턴
 
-> **STAGE 2 가 6 주차 가장 중요한 학습**. 5 주차 양파 한계 (Audit 가 commit 전 발사) 를 직접 재현 → `AFTER_COMMIT` 으로 해소까지 한 흐름으로.
+> **STAGE 2 가 6 주차 가장 중요한 학습**. 5 주차 advice 안-밖 순서의 한계 (Audit 가 commit 전 실행) 를 직접 재현 → `AFTER_COMMIT` 으로 해소까지 한 흐름으로.

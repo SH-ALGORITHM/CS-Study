@@ -48,7 +48,7 @@ import org.springframework.stereotype.Component;
  */
 @Aspect
 @Component
-@Order(1)   // Stage4 양파 껍질에서 가장 바깥 — 락 잡은 후 AuditAspect(@Order 2) 동작
+@Order(1)   // Stage4 advice 안-밖에서 가장 바깥 — 락 잡은 후 AuditAspect(@Order 2) 동작
 public class DistributedLockAspect {
 
     private static final String UNLOCK_LUA = """

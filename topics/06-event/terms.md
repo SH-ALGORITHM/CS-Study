@@ -140,23 +140,23 @@
 | 트리거 | 암묵적 (어노테이션) | 명시적 (`publishEvent`) |
 | 가시성 | 메서드 보기엔 안 보임 | publisher 코드에 한 줄 명시 |
 | 적용 범위 | 같은 패키지 / 횡단 관심사 | 모듈 간 / 부수 효과 전파 |
-| 트랜잭션 시점 | 양파 — 안 / 밖만 | 시간축 — 4 phase 자유 |
+| 트랜잭션 시점 | advice 안 / 밖만 | 시간축 — 4 phase 자유 |
 | 비동기 | `@Async` (같은 함정) | `@Async` (같은 함정) |
 | 적합 — 로깅 / 측정 / 권한 / 캐싱 / 트랜잭션 | ✓ | |
 | 적합 — 알림 / 외부 API / 통계 / 다른 모듈 | | ✓ |
 | 회색지대 — 감사 로그 (외부 시스템) | | ✓ (AFTER_COMMIT) |
 | 회색지대 — 감사 로그 (같은 DB) | ✓ | ✓ (BEFORE_COMMIT) |
 
-## 🌉 5 주차 회수 — 양파 한계
+## 🌉 5 주차 회수 — advice 안-밖 순서의 한계
 
 | 용어 | 풀어쓰면 |
 |---|---|
-| **양파 구조** | `@Order` 로 advice 호출 순서 명시 — 안 / 밖 구조만 가능 |
-| **TX 가 가장 바깥인 패턴** | 5 주차 권장 — Audit 가 TX 안쪽 → commit 전 발사 → 외부 시스템 회수 불가 |
-| **양파의 한계** | 시간축 (commit 전 / 후) 분리 불가. 안쪽 advice 는 항상 commit 전 |
-| **6 주차의 해소** | publishEvent 로 시간축 phase 분리. AFTER_COMMIT 이 양파 바깥보다도 더 바깥 |
+| **advice 안-밖 구조** | `@Order` 로 advice 호출 순서 명시 — 안 / 밖 구조만 가능 |
+| **TX 가 가장 바깥인 패턴** | 5 주차 권장 — Audit 가 TX 안쪽 → commit 전 실행 → 외부 시스템 회수 불가 |
+| **advice 순서의 한계** | 시간축 (commit 전 / 후) 분리 불가. 안쪽 advice 는 항상 commit 전 |
+| **6 주차의 해소** | publishEvent 로 시간축 phase 분리. AFTER_COMMIT 이 advice 호출 순서의 가장 바깥보다도 더 바깥 |
 | **`AfterReturning` advice 와 차이** | AOP `AfterReturning` 은 같은 트랜잭션 안 + 메서드 정상 종료 시점. `AFTER_COMMIT` 은 트랜잭션 commit 후 — 다른 시점 |
-| **AOP + Event 함께** | 분산락 (AOP) + 트랜잭션 (AOP) + 감사 (AOP) + 알림 (Event) — 양파와 시간축이 직교 (orthogonal). 같이 쓰면 깔끔 |
+| **AOP + Event 함께** | 분산락 (AOP) + 트랜잭션 (AOP) + 감사 (AOP) + 알림 (Event) — advice 안-밖 + 시간축이 직교 (orthogonal). 같이 쓰면 깔끔 |
 
 ## 🌟 7 주차 브릿지 — JPA / @DomainEvents
 
@@ -201,7 +201,7 @@
 
 ## ★ STAGE 1 진입 관문 (입으로 답)
 
-1. **5 주차 양파 한계** — `@Order(1) TX + @Order(2) Audit` 에서 Audit 가 commit 전 발사 → 외부 시스템 회수 불가
+1. **5 주차 advice 안-밖 순서의 한계** — `@Order(1) TX + @Order(2) Audit` 에서 Audit 가 commit 전 실행 → 외부 시스템 회수 불가
 2. **`@TransactionalEventListener` 4 phase** — BEFORE_COMMIT (같은 트랜잭션 마지막) / AFTER_COMMIT (외부 알림) / AFTER_ROLLBACK (보상) / AFTER_COMPLETION (정리)
 3. **`@Async` self-invocation** — `@Transactional` 과 같은 프록시 메커니즘. `this` = 원본 → 프록시 우회 → 비동기 X
 

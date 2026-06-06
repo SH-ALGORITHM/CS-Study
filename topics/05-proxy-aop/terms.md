@@ -54,7 +54,7 @@
 | **호출 순서** (≥ 5.2.7, 정상) | Around 시작 → Before → 메서드 → AfterReturning → After → Around 종료 |
 | **호출 순서** (≥ 5.2.7, 예외) | Around 시작 → Before → 메서드 (예외) → AfterThrowing → After → Around 예외 처리 |
 | **5.2.6 → 5.2.7 변경** (Issue #25186) | 5.2.6 이하 = 메서드 선언 순서 의존 (비결정적). 5.2.7 부터 우선순위 고정 `Around > Before > After > AfterReturning > AfterThrowing` |
-| **on the way in / out** | 들어갈 때 = 우선순위 높은 게 먼저 / 나갈 때 = 우선순위 높은 게 가장 늦게. → Around 가 양파의 가장 바깥 |
+| **on the way in / out** | 들어갈 때 = 우선순위 높은 게 먼저 / 나갈 때 = 우선순위 높은 게 가장 늦게. → Around 가 advice 호출 순서의 가장 바깥 |
 | **`@Around` 가 가장 일반인 이유** | 나머지 4 종은 `@Around` 의 특수 케이스. `proceed()` 전후 + try/catch 자유 |
 
 ## 🎯 Pointcut 표현식
@@ -96,12 +96,12 @@
 
 | 용어 | 풀어쓰면 |
 |---|---|
-| **AOP 체이닝** | 여러 Aspect 가 같은 메서드에 매칭될 때 양파 껍질처럼 겹쳐서 호출 |
+| **AOP 체이닝** | 여러 Aspect 가 같은 메서드에 매칭될 때 호출 순서 안-밖 구조로 겹쳐서 호출 |
 | **`@Order(N)`** | Aspect 우선순위 명시. **숫자 작은 게 바깥** |
 | **`Ordered.HIGHEST_PRECEDENCE`** | `Integer.MIN_VALUE` — 가장 바깥 |
 | **`Ordered.LOWEST_PRECEDENCE`** | `Integer.MAX_VALUE` — 가장 안쪽 |
-| **양파 껍질 구조** | 트랜잭션 (바깥) → 감사 → 측정 (안쪽) → 실제 메서드 |
-| **트랜잭션이 바깥인 이유** | commit 전에 감사 / 알림이 발사되면 데이터 불일치. 트랜잭션이 모든 advice 감싸야 안전 |
+| **advice 안-밖 구조** | 트랜잭션 (바깥) → 감사 → 측정 (안쪽) → 실제 메서드 |
+| **트랜잭션이 바깥인 이유** | commit 전에 감사 / 알림이 실행되면 데이터 불일치. 트랜잭션이 모든 advice 감싸야 안전 |
 | **commit 후 처리가 필요한 경우** | `@TransactionalEventListener(AFTER_COMMIT)` — 6 주차 본론 |
 | **순서 불명시 시 동작** | Spring 이 임의 순서 결정 — 불확정. 면접 / 실무에서는 `@Order` 명시 권장 |
 
