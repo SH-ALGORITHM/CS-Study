@@ -33,11 +33,13 @@ example/
             │   ├── Stage2_1_TimeoutMissing
             │   ├── Stage2_2_TimeoutSet
             │   └── Stage2_3_PoolExhaustion (worker 10 + 50 동시)
+            ├── s3/  Connection Pool 본격
+            │   └── Stage3_1_PoolExhaustion (Pool maxTotal=2 + 동시 10)
             └── s4/  Circuit Breaker
                 └── Stage4_1_CircuitBreaker (CLOSED → OPEN → HALF_OPEN)
 ```
 
-STAGE 3 (Connection Pool 본격) 은 시나리오에서만 다룸 (학습 시간 절약).
+Stage2_3 = 스레드 풀 고갈 / Stage3_1 = 커넥션 풀 고갈 — 같은 메커니즘, 다른 자원.
 
 ## 실행 방법
 
@@ -54,7 +56,9 @@ cd topics/10-http-pool/example
 
 ./gradlew run -PmainClass=stage.s2.Stage2_1_TimeoutMissing      # 5 초 대기
 ./gradlew run -PmainClass=stage.s2.Stage2_2_TimeoutSet          # 3 초 후 실패
-./gradlew run -PmainClass=stage.s2.Stage2_3_PoolExhaustion      # 50 동시
+./gradlew run -PmainClass=stage.s2.Stage2_3_PoolExhaustion      # 스레드 풀 50 동시
+
+./gradlew run -PmainClass=stage.s3.Stage3_1_PoolExhaustion      # 커넥션 풀 maxTotal=2
 
 ./gradlew run -PmainClass=stage.s4.Stage4_1_CircuitBreaker      # CB 전환
 ```
