@@ -46,7 +46,7 @@ import java.lang.annotation.Target;
  *   [2 Around 예외 처리]
  * </pre>
  *
- * <p>핵심: Around 가 양파의 가장 바깥 — 종료가 가장 마지막.
+ * <p>핵심: Around 가 advice 호출 순서의 가장 바깥 — 종료가 가장 마지막.
  * 5.2.6 이하에서는 메서드 선언 순서 의존 (비결정적).
  * 본인 출력을 위 표와 비교 → measurements.md 에 기록.
  */
@@ -144,7 +144,7 @@ public class Stage2_4_FiveAdvice {
         System.out.println("  · 우선순위 고정: Around > Before > After > AfterReturning > AfterThrowing");
         System.out.println("  · 들어갈 때 — 우선순위 높은 게 먼저 (Around 시작 → Before)");
         System.out.println("  · 나갈 때   — 우선순위 높은 게 가장 늦게 (AfterReturning → After → Around 종료)");
-        System.out.println("  · Around 가 양파의 가장 바깥. 5.2.6 이하는 메서드 선언 순서 의존");
+        System.out.println("  · Around 가 advice 호출 순서의 가장 바깥. 5.2.6 이하는 메서드 선언 순서 의존");
 
         ctx.close();
     }

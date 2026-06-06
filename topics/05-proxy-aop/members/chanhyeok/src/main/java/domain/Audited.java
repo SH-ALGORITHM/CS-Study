@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 감사 로그 자작 어노테이션 — Stage4 양파 껍질 시연용.
+ * 감사 로그 자작 어노테이션 — Stage4 advice 안-밖 시연용.
  *
  * <p>@Order(2) — @DistributedLock(@Order(1)) 안쪽, 즉 락 잡은 후 비즈니스 직전에 기록.
  */

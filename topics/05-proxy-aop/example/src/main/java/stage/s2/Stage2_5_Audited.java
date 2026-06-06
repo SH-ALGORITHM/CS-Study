@@ -21,7 +21,7 @@ import org.springframework.context.annotation.FilterType;
  * AuditAspect 가 호출 전후로 사용자 ID / 메서드 / 인자 / 결과 / 실행 시간 자동 기록.
  *
  * <p>여기서는 AuditAspect 도 활성화 → MyTransactionalAspect(@Order 1) + AuditAspect(@Order 2)
- * 양파 껍질 동작 + 감사 로그 형식 확인.
+ * advice 안-밖 동작 + 감사 로그 형식 확인.
  */
 @Configuration
 @EnableAutoConfiguration

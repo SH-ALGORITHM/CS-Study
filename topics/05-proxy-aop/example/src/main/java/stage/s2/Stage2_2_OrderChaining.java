@@ -20,7 +20,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * STAGE 2-2 — AOP 체이닝 + {@code @Order} 양파 껍질.
+ * STAGE 2-2 — AOP 체이닝 + {@code @Order} advice 안-밖 순서.
  *
  * <h3>관찰 포인트</h3>
  * <pre>
@@ -105,7 +105,7 @@ public class Stage2_2_OrderChaining {
         ConfigurableApplicationContext ctx = SpringApplication.run(Stage2_2_OrderChaining.class, args);
         OrderService svc = ctx.getBean(OrderService.class);
 
-        MeasurementLog.title("STAGE 2-2 — @Order 양파 껍질");
+        MeasurementLog.title("STAGE 2-2 — @Order advice 안-밖 순서");
         MeasurementLog.section("transfer(1 → 2, 100) 정상 종료");
         svc.transfer(1L, 2L, new BigDecimal("100.00"), false);
 
