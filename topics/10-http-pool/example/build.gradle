@@ -1,0 +1,31 @@
+// 10주차 example — HTTP 클라이언트 + Connection Pool + Timeout + Circuit Breaker
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+repositories { mavenCentral() }
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.0'
+
+    // Apache HttpClient 5 — Pooling
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.3'
+
+    // Resilience4j (Stage4 만 사용)
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-aop:3.2.0'
+}
+
+application {
+    mainClass = providers.gradleProperty('mainClass').orElse('server.SlowApiServer')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}
