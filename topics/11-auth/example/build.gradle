@@ -1,0 +1,33 @@
+// 11주차 example — Spring Security + 세션 + JWT + 인가
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+repositories { mavenCentral() }
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-security:3.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.2.0'
+
+    // JWT — jjwt 0.12+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    runtimeOnly 'com.h2database:h2:2.2.224'
+}
+
+application {
+    mainClass = providers.gradleProperty('mainClass').orElse('stage.s1.Stage1_1_BCrypt')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}
