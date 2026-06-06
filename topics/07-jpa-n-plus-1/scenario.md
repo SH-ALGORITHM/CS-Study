@@ -865,7 +865,7 @@ orderRepo.save(order);          // ← save 시점에 등록된 이벤트 자동
 |---|---|
 | `@TransactionalEventListener` 가 `TransactionSynchronization` 콜백 등록 | 같은 메커니즘으로 영속성 컨텍스트도 close 자리 등록 |
 | `@Async + AFTER_COMMIT` 새 스레드 = ThreadLocal 날아감 | 영속성 컨텍스트도 같이 날아감 → Lazy 폭발 |
-| 5 주차 양파 한계를 시간축으로 풀었듯 | 7 주차 영속성 컨텍스트는 또 다른 암묵적 메커니즘 (변경 감지 + 지연 쓰기) |
+| 5 주차 advice 안-밖 순서의 한계를 시간축으로 풀었듯 | 7 주차 영속성 컨텍스트는 또 다른 암묵적 메커니즘 (변경 감지 + 지연 쓰기) |
 | `@DomainEvents` 살짝 예고 (STAGE 5) | 7 주차 STAGE 5 에서 `AbstractAggregateRoot` 본격 |
 | Event = 명시적 발행 (publishEvent) | JPA = 명시적 SQL X. 객체 변경만 → 자동 SQL |
 

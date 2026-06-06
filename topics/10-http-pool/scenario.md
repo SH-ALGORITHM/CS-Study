@@ -533,7 +533,7 @@ Circuit Breaker / Retry / Pool 모두 **메트릭 노출**. Micrometer + Prometh
 - **"Bulkhead"** — 외부 호출 스레드 풀 분리. 톰캣 워커 보호
 - **"Retry 와 Circuit Breaker 의 관계"** — Retry = 일시 장애 / Circuit Breaker = 영구 장애 격리
 - **"OSIV vs 외부 호출 풀 고갈"** — 둘 다 외부 대기로 풀 점유. 7 주차 / 10 주차 같은 자리
-- **"`@Retry` + `@CircuitBreaker` 같이 붙으면 누가 먼저?"** — Retry (바깥) → CircuitBreaker (안). 5 주차 `@Order` 양파와 같은 메커니즘
+- **"`@Retry` + `@CircuitBreaker` 같이 붙으면 누가 먼저?"** — Retry (바깥) → CircuitBreaker (안). 5 주차 `@Order` advice 안-밖과 같은 메커니즘
 - **"HALF_OPEN 에서 무한 시도하는가"** — X. `permittedNumberOfCallsInHalfOpenState` 만큼만 ("간보기"). 결과로 CLOSED / OPEN
 
 ### 실무 확장 화두
@@ -546,7 +546,7 @@ Circuit Breaker / Retry / Pool 모두 **메트릭 노출**. Micrometer + Prometh
 - **외부 호출의 idempotency** — Retry 시 같은 요청 2 번 발생. PG 결제 같은 곳은 idempotency-key 필수
 - **9 주차 캐시 + 10 주차 stale-while-revalidate** — 캐시 만료 시 백그라운드 갱신 + 옛 값 반환
 - **Pool + Timeout 혼용 함정** — Apache HttpClient 5 쓸 때 Timeout 은 `SimpleClientHttpRequestFactory` setter 가 아니라 **`RequestConfig` / `ConnectionConfig`** 단에서. 둘 섞으면 한쪽 무시. 실무 가장 흔한 실수
-- **Resilience4j 어노테이션 체이닝 순서 (5 주차 회수)** — `@Retry` + `@CircuitBreaker` 같이 붙으면 기본 `Retry (바깥) → CircuitBreaker (안)`. 재시도 후에도 실패하면 CB 통계에 쌓임. 5 주차 `@Order` 양파와 같은 메커니즘
+- **Resilience4j 어노테이션 체이닝 순서 (5 주차 회수)** — `@Retry` + `@CircuitBreaker` 같이 붙으면 기본 `Retry (바깥) → CircuitBreaker (안)`. 재시도 후에도 실패하면 CB 통계에 쌓임. 5 주차 `@Order` advice 안-밖과 같은 메커니즘
 - **HALF_OPEN 의 "간보기" 한도** — `permittedNumberOfCallsInHalfOpenState` (기본 10). OPEN 후 wait-duration 지나 HALF_OPEN 되면 무한 시도 X. 딱 N 회만 보내고 성공률로 CLOSED / OPEN
 
 
