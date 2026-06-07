@@ -25,7 +25,7 @@ public class TransferService {
         this.dataSource = dataSource;
     }
 
-    @DistributedLock(key = "wallet:#{fromId}", ttlSeconds = 5)
+    @DistributedLock(key = "wallet:#{#fromId}", ttlSeconds = 5)
     @Audited(action = "TRANSFER")   // Stage4 advice 안-밖 — @Order(1) Lock > @Order(2) Audit
     public void transfer(long fromId, long toId, BigDecimal amount) {
         try (Connection conn = dataSource.getConnection()) {
