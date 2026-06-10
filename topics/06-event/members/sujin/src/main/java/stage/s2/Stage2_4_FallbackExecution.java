@@ -38,9 +38,8 @@ class PaymentAuditService {
 @Component
 class PaymentAuditListener {
 
-    // TODO: 1차로 아래 그대로(fallbackExecution 안 줌 = 기본 false) 돌려서
-    //       리스너가 안 불리는지(조용히 무시) 확인.
-    //       그 다음 fallbackExecution = true 를 추가하고 다시 돌려 즉시 실행되는지 비교.
+    // 1차로 아래 그대로(fallbackExecution 안 줌 = 기본 false) 돌려 리스너가 안 불리는지(조용히 무시) 확인.
+    // 그 다음 fallbackExecution = true 를 추가하고 다시 돌려 즉시 실행되는지 비교.
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     void onAudit(PaymentAuditEvent e) {
         System.out.println("  [감사] 결제 시도 기록 — id=" + e.paymentId());
