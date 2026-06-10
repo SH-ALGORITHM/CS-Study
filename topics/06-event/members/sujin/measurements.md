@@ -136,7 +136,16 @@ PointListener(AFTER_COMMIT)=point INSERT.
 > 면접 차별점: 대부분 "0 나옵니다"만 앎. "1 나와도 위험한 이유(우발적 commit·비이식성·JPA 유실)"까지가 답.
 
 
+
 ## STAGE 3 — `@Async` 비동기
+
+### 자동 누적 로그
+
+- [06-11 01:34] s3-1 · publisher 블록 시간 = 511ms
+- [06-11 01:35] s3-1 · publisher 블록 시간 = 4ms
+- [06-11 01:37] s3-3 · self-invocation — this.asyncMethod() 는 @Async 무시(동기)
+- [06-11 01:40] s3-6 · @Async + AFTER_COMMIT 새 스레드 — 트랜잭션 컨텍스트 유무
+- [06-11 01:40] s3-6 · @Async + AFTER_COMMIT 새 스레드 — 트랜잭션 컨텍스트 유무
 
 ### 3-1/3-2 — 동기 vs @Async
 
@@ -175,7 +184,7 @@ JPA 면 영속성 컨텍스트도 없어 Lazy 로딩 시 `LazyInitializationExce
 새 트랜잭션을 열어 컨텍스트 확보(true/true). → `@Async + AFTER_COMMIT` 에서 DB/영속성 만지면 REQUIRES_NEW 필수.
 2-5 의 REQUIRES_NEW 함정 + 새 스레드 ThreadLocal 손실이 겹치는 자리. 7주차 JPA 단골.
 
-### 3-4 / 3-5 / 3-7 — 개념 정리 (미실측)
+### 3-4 / 3-5 / 3-7 — 개념 정리 (3-7 만 실측)
 
 **3-4 스레드풀 함정**: Boot 자동 `applicationTaskExecutor` 기본 = core=8 / queue=MAX / max=MAX.
 - `ThreadPoolExecutor` 증설 규칙: core 채움 → **큐 채움** → 큐 다 차야 max 증설 → max 차면 RejectedHandler.
@@ -185,14 +194,47 @@ JPA 면 영속성 컨텍스트도 없어 Lazy 로딩 시 `LazyInitializationExce
 **3-5 @Async 예외**: 반환 `void` → 예외 **조용히 소멸**(publisher 전파 X, 1-3 동기와 정반대).
 `Future<T>` → `get()` 시 `ExecutionException`. `AsyncUncaughtExceptionHandler` 빈으로 void 예외도 포착 가능.
 
-**3-7 Virtual Thread**: `spring.threads.virtual.enabled=true` 한 줄 → 자동 executor 가상 스레드化.
-I/O 바운드면 풀 튜닝 고민 소멸. 검증은 이름(task-N 유지) 말고 `Thread.currentThread().isVirtual()`.
-self-invocation 함정은 가상 스레드와 **직교**(프록시 이슈라 그대로).
+**3-7 Virtual Thread** (실측): `spring.threads.virtual.enabled=true` 한 줄 → 자동 executor 가상 스레드化.
+- 실측 출력: `[slow] start — thread=task-1 virtual=true` — **이름은 task-1 그대로인데 `isVirtual()=true`**.
+  → 이름으론 platform/virtual 구분 불가, `Thread.currentThread().isVirtual()` boolean 으로만 확인.
+- I/O 바운드면 풀 튜닝(core/max/queue) 고민 소멸(가상 스레드 거의 무제한 생성, 블로킹이 캐리어 점유 X).
+- self-invocation 함정은 가상 스레드와 **직교**(프록시 이슈라 그대로). 커스텀 executor 등록 stage 면 자동설정 덮여 isVirtual()=false.
 
-### 자동 누적 로그
 
-- [06-11 01:34] s3-1 · publisher 블록 시간 = 511ms
-- [06-11 01:35] s3-1 · publisher 블록 시간 = 4ms
-- [06-11 01:37] s3-3 · self-invocation — this.asyncMethod() 는 @Async 무시(동기)
-- [06-11 01:40] s3-6 · @Async + AFTER_COMMIT 새 스레드 — 트랜잭션 컨텍스트 유무
-- [06-11 01:40] s3-6 · @Async + AFTER_COMMIT 새 스레드 — 트랜잭션 컨텍스트 유무
+
+## STAGE 4 — AOP vs Event 통합
+
+코드 실행 없는 설계/결정 단계. 5주차 권한검증(AOP) vs 6주차 결제(Event) 대비로 결정 기준 도출.
+
+### 4-1 — 5주차 AuthAspect 한 aspect 안에 두 관심사
+
+`AuthAspect.@Before` 안에 (A)+(B) 가 섞여 있음:
+- **(A) `[AUTH] ...` 출력** = 접근 시도 기록(부수효과)
+- **(B) `throw AccessDeniedException`** = 권한 없으면 메서드 차단(게이트)
+
+**(B) 게이트는 이벤트로 이관 불가** — 3가지 이유:
+1. 본문 실행 **전**에 끼어들어야 함 (이벤트는 본문 실행 중에야 `publishEvent` 도달)
+2. **veto(거부)** 가능해야 함 — 리스너는 publisher 메서드를 막을 수 없음
+3. **동기**여야 함
+→ AOP `@Before` 가 셋 다 충족(메서드 앞 + throw 시 proceed 차단). 게이트는 AOP 고정.
+
+**거부(denied)는 어떤 phase 로도 못 잡음** — `@Order(1)` AuthAspect 가 최외곽이라 거부 시
+본문 진입 X → 트랜잭션 시작 X → `publishEvent` 도달 X → 이벤트 0개. `AFTER_ROLLBACK` 도 안 불림.
+- ★ 구분: **"권한 거부"**(본문 진입 X, 이벤트 불가) ≠ **"권한 통과 후 작업 실패=rollback"**(`AFTER_ROLLBACK` 으로 잡힘).
+- → 거부 포함 접근 감사는 게이트 자리(AOP)에만 기록 가능.
+
+### 4-2 — 결정 매트릭스
+
+| 관심사 | AOP / Event | 왜 |
+|---|---|---|
+| 권한 게이트(차단) | **AOP** | 본문 전 veto + 동기 |
+| 거부 포함 접근 감사 | **AOP** | 거부는 본문 진입 X → 이벤트 0개 |
+| 권한 통과 후 작업 실패 보상 | **Event** (`AFTER_ROLLBACK`) | 인가됐고 트랜잭션이 돌다 실패한 케이스 |
+| 결제 후 영수증/포인트/알림 | **Event** | 인가·성공한 사건이 여러 모듈로 퍼짐 |
+
+**★ 한 줄 결론**: 메서드 호출을 **가로채 제어**(intercept/wrap/veto)해야 하면 **AOP**,
+한 사건의 결과가 **여러 모듈로 퍼져나가야**(fan-out) 하면 **Event**.
+- AOP = 메서드와 한 몸, 실행 흐름에 끼어듦. publisher와 결합.
+- Event = 끝난 "사실"을 발행, publisher 는 구독자를 모름(decoupled), 책임이 다른 모듈로 분기.
+- 두 축은 직교 — 한 메서드에 `@DistributedLock`/`@Transactional`/`@Audited`(AOP, advice 안-밖)
+  + `publishEvent`(Event, 시간축 phase) 동시 사용 가능.
