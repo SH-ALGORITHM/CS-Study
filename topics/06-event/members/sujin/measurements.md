@@ -135,3 +135,64 @@ PointListener(AFTER_COMMIT)=point INSERT.
 
 > 면접 차별점: 대부분 "0 나옵니다"만 앎. "1 나와도 위험한 이유(우발적 commit·비이식성·JPA 유실)"까지가 답.
 
+
+## STAGE 3 — `@Async` 비동기
+
+### 3-1/3-2 — 동기 vs @Async
+
+리스너 안에 `Thread.sleep(500)`. publisher 시간을 `System.nanoTime()` 으로 측정.
+
+| 모드 | publisher 총 시간 | `[slow]` 스레드 |
+|---|---|---|
+| 동기 `@EventListener` | **511ms** | main |
+| `@Async` | **4ms** | task-N |
+
+**해석**: 동기는 리스너가 publisher 와 같은 스레드 → 500ms 가 그대로 더해짐(511). `@Async` 는
+리스너를 별 스레드(task-N)로 던지고 publisher 즉시 반환(4ms) → 리스너 처리시간과 **디커플**.
+HTTP 요청 처리면 응답시간에 직결되므로 비동기가 치명적 차이.
+
+### 3-3 — self-invocation 함정 (5주차 @Transactional 회수)
+
+`place()` 안에서 `this.asyncNotify()` 호출 → `[asyncNotify] thread=main` (비동기 무시, 동기 실행).
+
+- **메커니즘**: `@Async` advice 는 프록시에 있음. `this` 는 원본 target(프록시 아님) → 프록시 우회 → advice 안 걸림. 5주차 `@Transactional` self-invocation 과 동일.
+- **해결**: (a) self 주입 / (b) 클래스 분리 / (c) ★ 이벤트 발행 → 별도 `@Async` 리스너가 받음
+  (publishEvent 는 멀티캐스터→리스너 프록시 경유라 `@Async` 적용 + 자연 분리. 가장 6주차다운 해법).
+- 비동기 도구(가상 스레드 포함)가 바뀌어도 프록시 이슈라 그대로 남음.
+
+### 3-6 — @Async + AFTER_COMMIT 새 스레드 함정 (REQUIRES_NEW)
+
+`settle()`(main, tx) → 발행 → `@Async @TransactionalEventListener(AFTER_COMMIT)` 리스너.
+
+| 리스너 트랜잭션 | thread | actualTxActive | syncActive |
+|---|---|---|---|
+| REQUIRES_NEW 없음 | task-1 | **false** | **false** |
+| `REQUIRES_NEW` 있음 | task-1 | **true** | **true** |
+
+**해석**: `@Async` 가 AFTER_COMMIT 콜백을 별 스레드(task-1)로 던짐 → `TransactionSynchronizationManager`
+(ThreadLocal, 5주차 회수)가 그 스레드엔 안 따라옴 → 트랜잭션 컨텍스트 없음(false/false).
+JPA 면 영속성 컨텍스트도 없어 Lazy 로딩 시 `LazyInitializationException`. `REQUIRES_NEW` 가 새 스레드에서
+새 트랜잭션을 열어 컨텍스트 확보(true/true). → `@Async + AFTER_COMMIT` 에서 DB/영속성 만지면 REQUIRES_NEW 필수.
+2-5 의 REQUIRES_NEW 함정 + 새 스레드 ThreadLocal 손실이 겹치는 자리. 7주차 JPA 단골.
+
+### 3-4 / 3-5 / 3-7 — 개념 정리 (미실측)
+
+**3-4 스레드풀 함정**: Boot 자동 `applicationTaskExecutor` 기본 = core=8 / queue=MAX / max=MAX.
+- `ThreadPoolExecutor` 증설 규칙: core 채움 → **큐 채움** → 큐 다 차야 max 증설 → max 차면 RejectedHandler.
+- 큐가 무제한이라 영원히 안 참 → max 증설 불가 → **사실상 8개 고정 + 무한 큐**. 직접 설정 시 queue 유한값(예 100)으로 막아야 max 증설이 진짜 일어남.
+- 멀티캐스터 전역 비동기 vs `@Async`: 전역은 모든 리스너 비동기 + phase 콜백 ThreadLocal 동기화와 어긋남 → **per-listener `@Async` 가 정답**.
+
+**3-5 @Async 예외**: 반환 `void` → 예외 **조용히 소멸**(publisher 전파 X, 1-3 동기와 정반대).
+`Future<T>` → `get()` 시 `ExecutionException`. `AsyncUncaughtExceptionHandler` 빈으로 void 예외도 포착 가능.
+
+**3-7 Virtual Thread**: `spring.threads.virtual.enabled=true` 한 줄 → 자동 executor 가상 스레드化.
+I/O 바운드면 풀 튜닝 고민 소멸. 검증은 이름(task-N 유지) 말고 `Thread.currentThread().isVirtual()`.
+self-invocation 함정은 가상 스레드와 **직교**(프록시 이슈라 그대로).
+
+### 자동 누적 로그
+
+- [06-11 01:34] s3-1 · publisher 블록 시간 = 511ms
+- [06-11 01:35] s3-1 · publisher 블록 시간 = 4ms
+- [06-11 01:37] s3-3 · self-invocation — this.asyncMethod() 는 @Async 무시(동기)
+- [06-11 01:40] s3-6 · @Async + AFTER_COMMIT 새 스레드 — 트랜잭션 컨텍스트 유무
+- [06-11 01:40] s3-6 · @Async + AFTER_COMMIT 새 스레드 — 트랜잭션 컨텍스트 유무
