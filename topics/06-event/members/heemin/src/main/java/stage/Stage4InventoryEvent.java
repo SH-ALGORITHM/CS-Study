@@ -3,6 +3,7 @@ package stage;
 import domain.InventoryService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication(
     scanBasePackages = {
@@ -10,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         "infra"
     }
 )
+@EnableAsync
 public class Stage4InventoryEvent {
 
     public static void main(
@@ -35,6 +37,11 @@ public class Stage4InventoryEvent {
         System.out.println(
             "[MAIN] Stage4 종료"
         );
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException ignored) {
+        }
 
         ctx.close();
     }
