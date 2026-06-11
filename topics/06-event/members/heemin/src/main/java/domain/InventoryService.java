@@ -40,10 +40,9 @@ public class InventoryService {
         );
 
         publisher.publishEvent(
-            new InventoryChangedEvent(
+            new AuditEvent(
                 productId,
-                100,
-                100 - quantity
+                quantity
             )
         );
 
