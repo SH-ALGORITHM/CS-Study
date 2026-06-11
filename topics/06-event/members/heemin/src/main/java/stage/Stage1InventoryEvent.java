@@ -4,7 +4,12 @@ import domain.InventoryService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(scanBasePackages = {"domain"})
+@SpringBootApplication(
+    scanBasePackages = {
+        "domain",
+        "infra"
+    }
+)
 public class Stage1InventoryEvent {
 
     public static void main(String[] args) {
