@@ -16,9 +16,9 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter:3.2.0'
     implementation 'org.springframework.boot:spring-boot-starter-aop:3.2.0'
-
     implementation 'org.springframework.boot:spring-boot-starter-jdbc:3.2.0'
-    runtimeOnly 'com.h2database:h2:2.2.224'
+
+    implementation 'org.postgresql:postgresql:42.7.4'
 }
 
 application {
