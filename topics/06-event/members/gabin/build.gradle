@@ -1,0 +1,86 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+def java21Launcher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    // STAGE 4 비교용 — 5 주차 @Audited (AOP) 와 6 주차 이벤트 결과 직접 비교
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // H2 인메모리 DB — 별도 Docker 없이 STAGE 2 트랜잭션 결합 검증
+    runtimeOnly 'com.h2database:h2'
+}
+
+application {
+    mainClass = providers.gradleProperty('mainClass').orElse('stage.s1.Stage1_1_HelloEvent')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+def stageMainClasses = [
+    'stage.s1.Stage1_1_HelloEvent',
+    'stage.s1.Stage1_2_MultipleListeners',
+    'stage.s1.Stage1_3_ListenerException',
+    'stage.s1.Stage1_4_OldStyleListener',
+    'stage.s1.Stage1_5_PayloadOnly',
+    'stage.s2.Stage2_1_BeforeCommitTrap',
+    'stage.s2.Stage2_1_AfterCommit',
+    'stage.s2.Stage2_2_AllPhases',
+    'stage.s2.Stage2_3_FallbackExecution',
+    'stage.s2.Stage2_4_AfterCommitDbWrite',
+    'stage.s3.Stage3_1_SyncSlow',
+    'stage.s3.Stage3_2_AsyncFast',
+    'stage.s3.Stage3_3_SelfInvocation',
+    'stage.s3.Stage3_4_AsyncException',
+    'stage.s3.Stage3_5_VirtualThread',
+    'stage.s4.Stage4_1_AopToEvent',
+    'stage.s4.Stage4_2_AopPlusEvent'
+]
+
+def previousStageTask = null
+def stageTasks = []
+stageMainClasses.eachWithIndex { mainClassName, index ->
+    def precedingStageTask = previousStageTask
+    def stageTask = tasks.register("runStage${index + 1}", JavaExec) {
+        group = 'application'
+        description = "Runs ${mainClassName}"
+        classpath = sourceSets.main.runtimeClasspath
+        mainClass = mainClassName
+        javaLauncher = java21Launcher
+        workingDir = projectDir
+    }
+    if (precedingStageTask != null) {
+        stageTask.configure {
+            mustRunAfter(precedingStageTask)
+        }
+    }
+    previousStageTask = stageTask
+    stageTasks.add(stageTask)
+}
+
+tasks.register('runAllStages') {
+    group = 'application'
+    description = 'Runs every S1-S4 example sequentially and appends measurements.md.'
+    dependsOn(stageTasks)
+}
