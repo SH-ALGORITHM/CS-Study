@@ -233,3 +233,4 @@ docker-compose.override.yaml
 # 검토 받을 때만 생성. 점검 끝나면 삭제 또는 그대로 둠.
 # =============================================================
 topics/*/review.md
+topics/06-event/members/heemin/.env
