@@ -1,0 +1,37 @@
+// 6주차 학습 — Spring Event (publishEvent + @TransactionalEventListener + @Async)
+// 5주차 P2P 송금 도메인 (PostgreSQL + Redis + 분산락 AOP) 연장.
+// 5주차 @Audited 제거 → publishEvent + AFTER_COMMIT listener 로 옮김.
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter:3.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-aop:3.2.0'        // 5주차 분산락 AOP
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc:3.2.0'       // @Transactional + JdbcTemplate
+
+    // 5주차 인프라 그대로
+    implementation 'org.postgresql:postgresql:42.7.4'
+    implementation 'io.lettuce:lettuce-core:6.3.0.RELEASE'
+}
+
+application {
+    mainClass = providers.gradleProperty('mainClass').orElse('stage.Stage1Hello')
+}
+
+// -parameters: AspectJ 어노테이션 파라미터 바인딩 + SpEL 안전장치
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}
