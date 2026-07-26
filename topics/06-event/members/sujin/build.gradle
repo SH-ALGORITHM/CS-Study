@@ -1,0 +1,38 @@
+// 6주차 학습용 — Spring Event (publishEvent / @EventListener / @TransactionalEventListener / @Async)
+// 도메인: #2 결제(payment). STAGE 1 은 jdbc 없어도 되지만, STAGE 2 트랜잭션 결합부터 H2 사용.
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter:3.2.0'
+
+    // STAGE 2 트랜잭션 결합 — H2 인메모리
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc:3.2.0'
+    runtimeOnly 'com.h2database:h2:2.2.224'
+
+    // STAGE 4 비교용 — 5 주차 @Audited(AOP) vs 6 주차 이벤트 결과 비교
+    implementation 'org.springframework.boot:spring-boot-starter-aop:3.2.0'
+}
+
+application {
+    // 실행 시 -PmainClass=stage.s1.Stage1HelloEvent 로 덮어씀
+    mainClass = providers.gradleProperty('mainClass').orElse('stage.s1.Stage1HelloEvent')
+}
+
+// -parameters: @EventListener(condition = "...") SpEL / 파라미터 바인딩 안전장치 (5 주차에서 익힘)
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}
