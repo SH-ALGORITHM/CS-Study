@@ -80,14 +80,9 @@ cs-study/
 └── scripts/scaffold-week.sh        운영자 자동화
 ```
 
-## 빠른 시작
+## 가이드
 
-```bash
-git clone https://github.com/SH-ALGORITHM/CS-Study.git
-cd CS-Study
-```
-
-이후 모든 가이드 → **[CONTRIBUTING.md](./CONTRIBUTING.md)**
+셋업 · 진행 흐름 · 측정 방법 → **[CONTRIBUTING.md](./CONTRIBUTING.md)**
 
 ## AI 사용 규칙
 
