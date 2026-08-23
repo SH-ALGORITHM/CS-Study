@@ -1,9 +1,9 @@
 # CS 스터디
 
-2026-05 시작 · 진행 중
+2026-05 ~ 08 · 종료
 
 백엔드 면접에서 답이 막히는 지점을 직접 재현하고 측정해서 넘는다.
-주제 성격에 따라 형식을 바꿔 가며 세 번째 챕터를 진행 중이다.
+주제 성격에 따라 형식을 바꿔 가며 세 챕터를 진행했다.
 
 ---
 
@@ -13,7 +13,7 @@
 |---|---|---|---|
 | **Chapter 1** 도메인 기반 CS | 2026-05-01 ~ 06-15 (6주) | 7명 | 주차별 시나리오 → 각자 다른 도메인으로 재현 · 측정 → PR 리뷰 |
 | **Chapter 2** 이력서 · 포트폴리오 면접 | 2026-06-16 ~ 07-19 (5주) | 5명 | 각자 이력서/포트폴리오를 서로 파고드는 상호 질문 (동시성 위주) |
-| **Chapter 3** Spring MVC | 2026-07-20 ~ 진행 중 | 5명 | 김영한 강의 완주 + 각자 정리 → 정리본 공유 |
+| **Chapter 3** Spring MVC | 2026-07-20 ~ 08-17 (4주) | 5명 | 김영한 강의 완주 + 각자 정리 → 정리본 공유 |
 
 ## Chapter 1 — 멤버별 주차 도메인 (제출 코드 기준)
 
@@ -22,7 +22,7 @@
 | [오찬혁](https://github.com/ochanhyeok) | `chanhyeok` | 선착순 쿠폰 | 호텔 객실 예약 | P2P 송금 | 결제 PG 연동 | 분산락 AOP | P2P 송금 |
 | [김가빈](https://github.com/Gabee-ni) | `gabin` | 이중 환불 | 장바구니 결제 | 장바구니 결제 | 할인 정책 | 캐싱 | 주문 완료 |
 | [김민서](https://github.com/minseokim0113) | `minseo` | 출퇴근 기록 | 스터디룸 예약 | 좌석 예매 | 인증 전략 | 감사 로그 | |
-| [박수진](https://github.com/cl-o-lc) | `sujin` | 배치 처리 | | 주식 매수 / 매도 | 알림 발송 | 권한 검증 | |
+| [박수진](https://github.com/cl-o-lc) | `sujin` | 배치 처리 | | 주식 매수 / 매도 | 알림 발송 | 권한 검증 | 결제 완료 |
 | [강희민](https://github.com/kkhhmm3103) | `heemin` | 재고 관리 | | | | | 재고 변경 |
 | [한재훈](https://github.com/hjh79gw) | `jaehoon` | 조회수 / 좋아요 | 환전 / 통화 거래 | | | | |
 | [이가은](https://github.com/gaeunnlee) | `gaeun` | 콘서트 좌석 | | | | | |
@@ -41,14 +41,14 @@
 각자 이력서와 포트폴리오를 놓고 서로 질문하는 형식으로 5주간 진행했다.
 Chapter 1 에서 다룬 동시성 주제가 각자 프로젝트 어디에 실제로 걸려 있는지를 주로 파고들었다.
 
-## Chapter 3 — Spring MVC (진행 중)
+## Chapter 3 — Spring MVC
 
-김영한 *스프링 MVC* 강의를 함께 듣고, 각자 정리한 것을 모임에서 공유한다.
+김영한 *스프링 MVC* 강의를 함께 듣고, 각자 정리한 것을 모임에서 공유했다.
 정리본은 개인 블로그 / 노션에 쓰고 여기에 링크만 모은다.
 
 | 이름 | 정리 링크 |
 |---|---|
-| [오찬혁](https://github.com/ochanhyeok) | |
+| [오찬혁](https://github.com/ochanhyeok) | [MVC 정리](https://app.notion.com/p/MVC-3a4408702c75802da414c5e7af521b01?source=copy_link) |
 | [김가빈](https://github.com/Gabee-ni) | |
 | [김민서](https://github.com/minseokim0113) | |
 | [박수진](https://github.com/cl-o-lc) | |
