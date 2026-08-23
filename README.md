@@ -51,7 +51,7 @@ Chapter 1 에서 다룬 동시성 주제가 각자 프로젝트 어디에 실제
 | [오찬혁](https://github.com/ochanhyeok) | [MVC 정리](https://app.notion.com/p/MVC-3a4408702c75802da414c5e7af521b01?source=copy_link) |
 | [김가빈](https://github.com/Gabee-ni) | |
 | [김민서](https://github.com/minseokim0113) | |
-| [박수진](https://github.com/cl-o-lc) | |
+| [박수진](https://github.com/cl-o-lc) | [MVC 정리](https://velog.io/@cl-o-lc/series/Spring-MVC-1) |
 | [강희민](https://github.com/kkhhmm3103) | |
 
 ## 폴더 구조
