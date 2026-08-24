@@ -21,7 +21,7 @@
 |---|---|---|---|---|---|---|---|
 | [오찬혁](https://github.com/ochanhyeok) | `chanhyeok` | 선착순 쿠폰 | 호텔 객실 예약 | P2P 송금 | 결제 PG 연동 | 분산락 AOP | P2P 송금 |
 | [김가빈](https://github.com/Gabee-ni) | `gabin` | 이중 환불 | 장바구니 결제 | 장바구니 결제 | 할인 정책 | 캐싱 | 주문 완료 |
-| [김민서](https://github.com/minseokim0113) | `minseo` | 출퇴근 기록 | 스터디룸 예약 | 좌석 예매 | 인증 전략 | 감사 로그 | |
+| [김민서](https://github.com/minseokim0113) | `minseo` | 출퇴근 기록 | 스터디룸 예약 | 좌석 예매 | 인증 전략 | 감사 로그 | 재고 차감 |
 | [박수진](https://github.com/cl-o-lc) | `sujin` | 배치 처리 | | 주식 매수 / 매도 | 알림 발송 | 권한 검증 | 결제 완료 |
 | [강희민](https://github.com/kkhhmm3103) | `heemin` | 재고 관리 | | | | | 재고 변경 |
 | [한재훈](https://github.com/hjh79gw) | `jaehoon` | 조회수 / 좋아요 | 환전 / 통화 거래 | | | | |
